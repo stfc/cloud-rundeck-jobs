@@ -1,0 +1,62 @@
+- defaultTab: output
+  description: Assign stfc users (stfc/default domain users ONLY) to a project
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: dcbac6d6-2d0d-454b-b904-93d70123184f
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Assign-STFC-Users-To-Project
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: |-
+      Openstack Project ID Number or Name (ID Preferred, for name please use
+      quotations)
+    label: Project ID or Name
+    name: ProjectName
+    value: '"Rundeck Quarantine"'
+  - delimiter: ' '
+    description: Adds Openstack STFC Users - None by Default
+    label: STFC Users
+    multivalueAllSelected: true
+    multivalued: true
+    name: STFCUsers
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#Info: For more information/comments for this section please view any\n\
+        #openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nif [[ -n @option.ProjectName@ ]]; then\n    for i in @option.STFCUsers@\n\
+        \        do\n            openstack user show --domain stfc $i >/dev/null;\n\
+        \            if [[ `echo $?` == 0 ]]; then\n                openstack role\
+        \ add --user $i --user-domain stfc --project \\\n                    @option.ProjectName@\
+        \ user;\n                echo \"User $i successfully added to project \\\n\
+        \                    @option.ProjectName@ as user, Details below:\";\n   \
+        \             openstack role assignment list --project @option.ProjectName@\
+        \ \\\n                    --user $i --user-domain stfc --names --role user;\n\
+        \            else\n                echo \"User $i does not exist, please check\
+        \ for the user \\\n                    manually\";\n                echo \"\
+        Exiting\";\n            fi\n        done\nelse\n    echo \"Incomplete information\
+        \ provided, unable to complete job.\";\n    echo \"Exiting\";\nfi "
+    keepgoing: false
+    strategy: node-first
+  timeout: 30m
+  uuid: dcbac6d6-2d0d-454b-b904-93d70123184f

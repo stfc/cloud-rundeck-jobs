@@ -1,0 +1,73 @@
+- defaultTab: output
+  description: |-
+    This utility assigns Openstack local users to a project.
+    The command used is:
+    openstack role add
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: 22f3cfee-f005-419a-8fec-cf721cafa7fd
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Assign-Local-Users-To-Project
+  nodeFilterEditable: false
+  options:
+  - description: |-
+      Password for Openstack user admin-rundeck
+      The password is stored locally and securely within Rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: "Name of the project to be created. (please apply quotations or remove\
+      \ spaces) \nDefaults to Rundeck Default - A project used to make cleanup easier\
+      \ in the \nevent of mistakes"
+    label: Project ID or Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Default"'
+  - delimiter: ' '
+    description: |-
+      Openstack local users
+      By default this adds only the default rundeck user
+    label: Local Users
+    multivalued: true
+    name: LocalUsers
+    required: true
+    value: user-rundeck
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - description: 'Script loops through provided list of users and adds them to the
+        project specified '
+      script: "#Info: For more information/comments for this section please view any\n\
+        #openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nif [[ -n @option.ProjectName@ ]]; then\n    for i in @option.LocalUsers@\n\
+        \        do \n            openstack user show --domain default $i > /dev/null;\n\
+        \            if [[ `echo $?` == 0 ]]; then\n                openstack role\
+        \ add --user $i --project @option.ProjectName@ \\\n                    user;\n\
+        \                echo \"User $i successfully added to project \\\n       \
+        \             @option.ProjectName@ as user, Details below:\";\n          \
+        \      openstack role assignment list --project @option.ProjectName@ \\\n\
+        \                    --user $i --user-domain default --names --role user;\n\
+        \            else\n                echo \"User does not exist, please add\
+        \ user before trying again\";\n                echo \"Exiting\";\n       \
+        \     fi\n        done\nelse\n    echo \"Incomplete information provided,\
+        \ unable to complete job.\";\n    echo \"Exiting\";\nfi "
+    keepgoing: false
+    strategy: node-first
+  timeout: 30m
+  uuid: 22f3cfee-f005-419a-8fec-cf721cafa7fd

@@ -1,0 +1,89 @@
+- defaultTab: output
+  description: |-
+    This utility performs the initial project creation command:
+    openstack project command
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: bc889c5e-1564-4dba-9373-b3d1259cca7e
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: truncate
+  loglimitStatus: '''Log Limit Reached (250MB)'''
+  name: Create-New-Project
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: |-
+      Name of the project to be created. (please apply quotations or remove spaces)
+      Defaults to Rundeck Default - A project used to make cleanup easier in the
+      event of mistakes
+    label: Project Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Default"'
+  - description: Description of project to be created (please apply quotations or remove spaces)
+    label: Project Description
+    name: ProjectDescription
+    required: true
+    value: '"Rundeck Default Project"'
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - description: The code above simply creates the project
+      script: |-
+        #Info: For more information/comments for this section please view any
+        #openstack api file
+
+        export OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4
+        export OS_PROJECT_NAME="admin"
+        export OS_USER_DOMAIN_NAME="default"
+
+        if [ -z "$OS_USER_DOMAIN_NAME" ]; then unset OS_USER_DOMAIN_NAME; fi
+
+        export OS_PROJECT_DOMAIN_ID="38372510d9bb4ac7916178b062d387de"
+
+        if [ -z "$OS_PROJECT_DOMAIN_ID" ]; then unset OS_PROJECT_DOMAIN_ID; fi
+
+        unset OS_TENANT_ID
+        unset OS_TENANT_NAME
+
+        export OS_USERNAME="admin-rundeck"
+        export OS_PASSWORD=@option.OpenstackAdminPassword@
+        export OS_REGION_NAME="RegionOne"
+
+        if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
+
+        export OS_INTERFACE=public
+        export OS_IDENTITY_API_VERSION=3
+
+        if [[ -n @option.ProjectName@ && -n @option.ProjectDescription@ ]]; then
+            if [[ `openstack project list | grep @option.ProjectName@ | wc -l` == 0 ]];
+                then
+                openstack project create --domain default --description \
+                    @option.ProjectDescription@ @option.ProjectName@;
+                echo "Success."
+            else
+                echo "Project Exists - Details to Follow:";
+                openstack project show @option.ProjectName@;
+                echo "Exiting";
+                exit;
+            fi
+        else
+            echo "Project Name or Description values not set";
+            echo "Exiting";
+            exit;
+        fi
+    keepgoing: false
+    strategy: node-first
+  timeout: 5m
+  uuid: bc889c5e-1564-4dba-9373-b3d1259cca7e

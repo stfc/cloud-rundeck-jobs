@@ -1,0 +1,106 @@
+- defaultTab: output
+  description: Assign a network to a project using rbac (based on ID)
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: d7461146-3125-4ea2-9d3d-b62037023718
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Assign-Network-To-Project
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: |-
+      Openstack Project ID Number or Name (ID Preferred, for name please use
+      quotations)
+      Defaults to Rundeck Quarantine Project for easier cleanup in the event of
+      mistakes.
+    label: Project ID or Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Quarantine"'
+  - description: |-
+      Openstack Network ID or Name (ID Preferred, if using name that has spaces please
+      use quotations) Defaults to Internal network ID
+    label: Network ID
+    name: NetworkID
+    required: true
+    value: 5be315b7-7ebd-4254-97fe-18c1df501538
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: |-
+        #Info: For more information/comments for this section please view any
+        #openstack api file
+
+        export OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4
+        export OS_PROJECT_NAME="admin"
+        export OS_USER_DOMAIN_NAME="default"
+
+        if [ -z "$OS_USER_DOMAIN_NAME" ]; then unset OS_USER_DOMAIN_NAME; fi
+
+        export OS_PROJECT_DOMAIN_ID="38372510d9bb4ac7916178b062d387de"
+
+        if [ -z "$OS_PROJECT_DOMAIN_ID" ]; then unset OS_PROJECT_DOMAIN_ID; fi
+
+        unset OS_TENANT_ID
+        unset OS_TENANT_NAME
+
+        export OS_USERNAME="admin-rundeck"
+        export OS_PASSWORD=@option.OpenstackAdminPassword@
+        export OS_REGION_NAME="RegionOne"
+
+        if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
+
+        export OS_INTERFACE=public
+        export OS_IDENTITY_API_VERSION=3
+
+        if [[ -n @option.ProjectName@ && -n @option.NetworkID@ ]]; then
+            if [[ `openstack project list | grep @option.ProjectName@  | wc -l` == 1 ]];
+                then
+                if [[ `openstack network list | grep @option.NetworkID@ | \
+                    wc -l` == 1 ]]; then
+                    openstack network rbac create --target-project \
+                        @option.ProjectName@ --type network --action access_as_shared \
+                        @option.NetworkID@;
+                    if [[ `echo $?` == 0 ]]; then
+                        echo "Success";
+                    else
+                        echo "Network RBAC rule already exists";
+                    fi
+                else
+                    echo "Network @option.NetworkID@ Does not Exist . Please Create it \
+                        and Try Again.";
+                    echo "Exiting";
+                    exit;
+                fi
+            else
+                echo "Project @option.ProjectName@ Does not Exist. Please Create it \
+                    and Try Again.";
+                if [[ `openstack network list | grep @option.NetworkID@ | \
+                    wc -l` == 1 ]]; then
+                    echo "Network @option.NetworkID@ Does not Exist . Please Create it \
+                        and Try Again.";
+                fi
+                echo "Exiting";
+                exit;
+            fi
+        else
+            echo "Project Name or Description values not set";
+            echo "Exiting";
+            exit;
+        fi
+    keepgoing: false
+    strategy: node-first
+  timeout: 5m
+  uuid: d7461146-3125-4ea2-9d3d-b62037023718

@@ -1,0 +1,80 @@
+- defaultTab: output
+  description: Creates a subnet for use in a "private" project
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: 89a69688-414d-4af4-bb91-4e7c63a73193
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Create-Private-Subnet
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: |-
+      Name of the project to be created. (please apply quotations or remove spaces)
+      Defaults to Rundeck Quarantine - A project used to make cleanup easier in the
+      event of mistakes
+    label: Project Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Quarantine"'
+  - description: Name of the netowkr to be created
+    label: Network Name
+    name: NetworkName
+    required: true
+    value: '"Rundeck Quarantine - Private"'
+  - description: Name of the subnet to be created
+    label: Subnet Name
+    name: SubnetName
+    required: true
+    value: '"Rundeck Quarantine - Subnet'
+  - description: Description of the subnet to be created
+    label: Subnet Description
+    name: SubnetDescription
+    required: true
+    value: '"Rundeck default private subnet"'
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#Info: For more information/comments for this section please view any\n\
+        #openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nIN_USE=( $(openstack subnet list | grep 192.168. | cut -d \"|\" -f5 | \\\
+        \n    awk '{$1=$1};1' | sort | cut -d \".\" -f3) );\n    \nAVAILABLE=();\n\
+        \nfor x in $(seq 1 254)\n    do\n        AVAILABILITY=\"AVAILABLE\";\n   \
+        \     for i in ${IN_USE[@]}\n            do \n                if [[ $i ==\
+        \ $x ]]; then\n                    AVAILABILITY=\"UNAVAILABLE\"\n        \
+        \        fi\n            done\n        if [[ $AVAILABILITY == \"AVAILABLE\"\
+        \ ]]; then\n            AVAILABLE+=(\"192.168.$x.0/24\");\n        fi\n  \
+        \      AVAILABILITY=\"AVAILABLE\";\n    done\n\nSIZE=${#AVAILABLE[@]}\n\n\
+        INDEX=$(( $RANDOM % $SIZE ))\n\nSUBNET_RANGE=${AVAILABLE[$INDEX]}\n\nBYTE3=(\
+        \ $(echo $SUBNET_RANGE | cut -d \".\" -f3 | awk '{$1=$1};1') )\n\nSUBNET_START=\"\
+        192.168.$BYTE3.10\"\n\nSUBNET_END=\"192.168.$BYTE3.254\"\n\nSUBNET_GATEWAY=\"\
+        192.168.$BYTE3.1\"\n\nif [[ -n @option.ProjectName@ && -n @option.SubnetName@\
+        \ && -n \\\n    @option.SubnetDescription@ && -n @option.NetworkName@ ]];\
+        \ then\n    openstack subnet create @option.SubnetName@ --description \\\n\
+        \        @option.SubnetDescription@ --subnet-range $SUBNET_RANGE \\\n    \
+        \    --allocation-pool start=$SUBNET_START,end=$SUBNET_END --dhcp --gateway\
+        \ \\\n        $SUBNET_GATEWAY --network @option.NetworkName@\n    echo \"\
+        Success\";\nelse\n    echo \"Insufficient information provided\";\n    echo\
+        \ \"Exiting\";\nfi"
+    keepgoing: false
+    strategy: node-first
+  timeout: 5m
+  uuid: 89a69688-414d-4af4-bb91-4e7c63a73193

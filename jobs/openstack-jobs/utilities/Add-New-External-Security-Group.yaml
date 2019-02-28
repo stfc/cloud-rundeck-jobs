@@ -1,0 +1,126 @@
+- defaultTab: output
+  description: Adds an External Security Group to an Existing Project
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: d0ceb97e-aa18-47ca-b845-a2b8ec1da9b2
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Add-New-External-Security-Group
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-jmm67114
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-jmm67114
+    valueExposed: true
+  - description: |-
+      Name of the target project. (please apply quotations or remove spaces)
+      Defaults to Rundeck Quarantine - A project used to make cleanup easier in the
+      event of mistakes
+    label: Project Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Quarantine"'
+  - label: Security Group Description
+    name: SecGroupDescription
+    required: true
+    value: '"Security Group to be used for machines requiring External Access"'
+  - description: "Do not use \"default\" as a name - this is only to be used for adding\
+      \ an external \ngroup to an existing project."
+    label: Security Group Name
+    name: SecGroupName
+    required: true
+    value: '"default-private"'
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#Info: For more information/comments for this section please view any\n\
+        #openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-jmm67114\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nopenstack quota set --secgroup-rules 200 @option.ProjectName@;\necho \"\
+        Security group rule quota for project @option.ProjectName@ has been \\\n \
+        \   increased to 200.\"\n\nif [[ -n @option.ProjectName@ ]]; then\n    echo\
+        \ \"Please note, error 409 messages will appear if a security group rule \\\
+        \n        already exists, this is normal behoviour and will not affect the\
+        \ job \\\n        outcome.;\"\n    openstack security group create --project\
+        \ @option.ProjectName@ \\\n        --description @option.SecGroupDescription@\
+        \ @option.SecGroupName@\n    SECURITY_GROUP=$(openstack security group list\
+        \ --project \\\n        @option.ProjectName@ | grep -v \"\\-\\-\" | grep -v\
+        \ \"ID\" | grep \\\n        @option.SecGroupName@ | cut -d\"|\" -f2);\n  \
+        \  openstack security group rule create --project @option.ProjectName@ \\\n\
+        \        --ingress --ethertype IPv4 --protocol ICMP --remote-ip 0.0.0.0/0\
+        \ \\\n        $SECURITY_GROUP;\n    openstack security group rule create --project\
+        \ @option.ProjectName@ \\\n        --egress --ethertype IPv4 --protocol ICMP\
+        \ --remote-ip 0.0.0.0/0 \\\n        $SECURITY_GROUP;\n    openstack security\
+        \ group rule create --project @option.ProjectName@ \\\n        --ingress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 22:22 --remote-ip \\\n        0.0.0.0/0 $SECURITY_GROUP;\n\
+        \    openstack security group rule create --project @option.ProjectName@ \\\
+        \n        --egress --ethertype IPv4 --protocol TCP --dst-port 53:53 --remote-ip\
+        \ \\\n        130.246.0.0/16 $SECURITY_GROUP;\n    openstack security group\
+        \ rule create --project @option.ProjectName@ \\\n        --ingress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 53:53 --remote-ip \\\n        130.246.0.0/16\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --egress --ethertype IPv4 --protocol TCP --dst-port 80:80 --remote-ip\
+        \ \\\n        130.246.180.101/32 $SECURITY_GROUP;\n    openstack security\
+        \ group rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n        130.246.180.163/32\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --ingress --ethertype IPv4 --protocol TCP --dst-port 80:80 --remote-ip\
+        \ \\\n        130.246.180.13/32 $SECURITY_GROUP;\n    openstack security group\
+        \ rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n        130.246.180.13/32\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --ingress --ethertype IPv4 --protocol TCP --dst-port 80:9999\
+        \ \\\n        --remote-ip 130.246.223.126/32 $SECURITY_GROUP;\n    openstack\
+        \ security group rule create --project @option.ProjectName@ \\\n        --ingress\
+        \ --ethertype IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n      \
+        \  130.246.180.101/32 $SECURITY_GROUP;\n    openstack security group rule\
+        \ create --project @option.ProjectName@ \\\n        --ingress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n        130.246.186.163/32\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --egress --ethertype IPv4 --protocol TCP --dst-port 443:443\
+        \ \\\n        --remote-ip 130.246.180.101/32 $SECURITY_GROUP;\n    openstack\
+        \ security group rule create --project @option.ProjectName@ \\\n        --egress\
+        \ --ethertype IPv4 --protocol TCP --dst-port 9999:9999 \\\n        --remote-ip\
+        \ 130.246.223.126/32 $SECURITY_GROUP;\n    openstack security group rule create\
+        \ --project @option.ProjectName@ \\\n        --egress --ethertype IPv4 --protocol\
+        \ UDP --dst-port 53:53 --remote-ip \\\n        130.246.0.0/16 $SECURITY_GROUP;\n\
+        \    openstack security group rule create --project @option.ProjectName@ \\\
+        \n        --ingress --ethertype IPv4 --protocol UDP --dst-port 53:53 --remote-ip\
+        \ \\\n        130.246.0.0/16 $SECURITY_GROUP;\n    openstack security group\
+        \ rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 443:443 \\\n        --remote-ip 130.246.176.0/22\
+        \ $SECURITY_GROUP;\n    for j in tcp udp ;\n    do\n\t    for i in \"8.0.0.0/7\"\
+        \ \"192.170.0.0/15\" \"172.64.0.0/10\" \"192.160.0.0/13\" \\\n\t        \"\
+        192.169.0.0/16\" \"192.176.0.0/12\" \"192.128.0.0/11\" \"173.0.0.0/8\" \\\n\
+        \t        \"172.0.0.0/12\"  \"130.248.0.0/12\" \"193.0.0.0/8\"  \"130.247.0.0/16\"\
+        \ \\\n\t        \"32.0.0.0/3\" \"131.0.0.0/8\" \"196.0.0.0/6\" \"176.0.0.0/4\"\
+        \ \\\n\t        \"128.0.0.0/7\" \"174.0.0.0/7\" \"144.0.0.0/4\" \"172.128.0.0/9\"\
+        \ \\\n\t        \"192.172.0.0/14\" \"192.192.0.0/10\" \"208.0.0.0/4\"  \"\
+        194.0.0.0/7\" \\\n\t        \"168.0.0.0/6\" \"132.0.0.0/6\" \"192.0.0.0/9\"\
+        \ \"160.0.0.0/5\" \\\n\t        \"172.32.0.0/11\" \"12.0.0.0/6\" \"16.0.0.0/4\"\
+        \ \"130.128.0.0/10\" \\\n\t        \"130.224.0.0/12\" \"130.0.0.0/9\" \"64.0.0.0/2\"\
+        \ \"130.244.0.0/15\" \\\n\t        \"200.0.0.0/5\" \"130.240.0.0/14\" \"11.0.0.0/8\"\
+        \ \"130.192.0.0/11\" \\\n\t        \"136.0.0.0/5\" \"0.0.0.0/5\";\n\t    do\n\
+        \t\t    openstack security group rule create --project \\\n\t\t        @option.ProjectName@\
+        \ --egress --ethertype IPv4 --protocol $j \\\n\t\t        --dst-port 1:65535\
+        \ --remote-ip $i $SECURITY_GROUP\n\t    done\n    done\nelse\n    echo \"\
+        Incomplete Infromation Provided, unable to carry out job\";\n    echo \"Exiting\"\
+        ;\n    exit;\nfi"
+    keepgoing: false
+    strategy: node-first
+  timeout: 30m
+  uuid: d0ceb97e-aa18-47ca-b845-a2b8ec1da9b2

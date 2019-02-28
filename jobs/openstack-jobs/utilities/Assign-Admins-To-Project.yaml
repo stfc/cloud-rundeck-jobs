@@ -1,0 +1,98 @@
+- defaultTab: output
+  description: |-
+    This utility assigns Openstack local admins to a project.
+    The command used is:
+    openstack role add
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: 90d92a45-ed38-46b8-bca7-30ab602d46c6
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Assign-Admins-To-Project
+  nodeFilterEditable: false
+  options:
+  - description: |-
+      Password for Openstack user admin-rundeck
+      The password is stored locally and securely within Rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: "Name of the project to be created. (please apply quotations or remove\
+      \ spaces) \nDefaults to Rundeck Default - A project used to make cleanup easier\
+      \ in the \nevent of mistakes"
+    label: Project ID or Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Default"'
+  - delimiter: ' '
+    description: |-
+      Openstack Administrators
+      By default this adds only the global admin
+    label: Administrators
+    multivalued: true
+    name: AdminUsers
+    required: true
+    value: admin
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - description: 'Script loops through provided list of users and adds them to the
+        project specified '
+      script: |-
+        #Info: For more information/comments for this section please view any
+        #openstack api file
+
+        export OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4
+        export OS_PROJECT_NAME="admin"
+        export OS_USER_DOMAIN_NAME="default"
+
+        if [ -z "$OS_USER_DOMAIN_NAME" ]; then unset OS_USER_DOMAIN_NAME; fi
+
+        export OS_PROJECT_DOMAIN_ID="38372510d9bb4ac7916178b062d387de"
+
+        if [ -z "$OS_PROJECT_DOMAIN_ID" ]; then unset OS_PROJECT_DOMAIN_ID; fi
+
+        unset OS_TENANT_ID
+        unset OS_TENANT_NAME
+
+        export OS_USERNAME="admin-rundeck"
+        export OS_PASSWORD=@option.OpenstackAdminPassword@
+        export OS_REGION_NAME="RegionOne"
+
+        if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
+
+        export OS_INTERFACE=public
+        export OS_IDENTITY_API_VERSION=3
+
+        if [[ -n @option.ProjectName@ ]]; then
+            for i in @option.AdminUsers@
+                do
+                    openstack user show --domain default $i > /dev/null;
+                    if [[ `echo $?` == 0 ]]; then
+                        openstack role add --user $i --project @option.ProjectName@ \
+                            admin;
+                        echo "User $i successfully added to project \
+                            @option.ProjectName@ as administrator, Details below:"
+                        openstack role assignment list --project @option.ProjectName@ \
+                            --user $i --user-domain default --names --role admin;
+                    else
+                        echo "User does not exist, please add user before trying again";
+                        echo "Exiting.";
+                    fi
+                done
+        else
+            echo "Incomplete information provided, unable to complete job.";
+            echo "Exiting";
+        fi
+    keepgoing: false
+    strategy: node-first
+  timeout: 30m
+  uuid: 90d92a45-ed38-46b8-bca7-30ab602d46c6

@@ -1,0 +1,82 @@
+- defaultTab: output
+  description: Creates a router for use in a "private" project
+  executionEnabled: true
+  group: Openstack-Jobs/Utilities
+  id: ddacc8a1-8cbe-4509-9c5a-5afd213eea32
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Create-Private-Router
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: |-
+      Name of the project to be created. (please apply quotations or remove spaces)
+      Defaults to Rundeck Quarantine - A project used to make cleanup easier in the
+      event of mistakes
+    label: Project Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Quarantine"'
+  - description: Name of the router to be created
+    label: Router Name
+    name: RouterName
+    required: true
+    value: '"Rundeck Default - Router"'
+  - description: A description of the router to be created
+    label: Router Description
+    name: RouterDescription
+    required: true
+    value: '"Router Description"'
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: |-
+        #Info: For more information/comments for this section please view any
+        #openstack api file
+
+        export OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4
+        export OS_PROJECT_NAME="admin"
+        export OS_USER_DOMAIN_NAME="default"
+
+        if [ -z "$OS_USER_DOMAIN_NAME" ]; then unset OS_USER_DOMAIN_NAME; fi
+
+        export OS_PROJECT_DOMAIN_ID="38372510d9bb4ac7916178b062d387de"
+
+        if [ -z "$OS_PROJECT_DOMAIN_ID" ]; then unset OS_PROJECT_DOMAIN_ID; fi
+
+        unset OS_TENANT_ID
+        unset OS_TENANT_NAME
+
+        export OS_USERNAME="admin-rundeck"
+        export OS_PASSWORD=@option.OpenstackAdminPassword@
+        export OS_REGION_NAME="RegionOne"
+
+        if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
+
+        export OS_INTERFACE=public
+        export OS_IDENTITY_API_VERSION=3
+
+        if [[ -n @option.ProjectName@ && -n @option.RouterName@ && -n \
+            @option.RouterDescription@ ]]; then
+            openstack router create --project @option.ProjectName@ --distributed \
+            --description @option.RouterDescription@ @option.RouterName@
+            echo "Success";
+        else
+            echo "Insufficient information provided";
+            echo "Exiting";
+        fi
+    keepgoing: false
+    strategy: node-first
+  timeout: 5m
+  uuid: ddacc8a1-8cbe-4509-9c5a-5afd213eea32
