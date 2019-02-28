@@ -1,0 +1,27 @@
+- defaultTab: output
+  description: A Kernel Version Summary of all VMs reporting
+  executionEnabled: true
+  group: Pakiti-Jobs/Queries
+  id: 0ad04d19-36fb-4c71-9e58-3fed8b5e5142
+  loglevel: INFO
+  loglimit: 100MB
+  loglimitAction: halt
+  name: VM-Kernel-Summary
+  nodeFilterEditable: false
+  retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#!/bin/bash\n\nDATE=\"\"\nKERNELS=()\n\nif [[ ! -e \"reports\" ]];\
+        \ then\n    echo \"No Reports Directory Found - Creating...\"\n    mkdir \"\
+        reports\"\nfi    \n\nDATE=$(date +%Y%m%d-%H%M)\n\ntouch reports/${DATE}-kernel-summary.txt\n\
+        \necho \"Kernel Version Count for all Openstack VMs\" > reports/${DATE}-kernel-summary.txt\n\
+        \nwhile IFS= read -r line; do\n    KERNELS+=( \"$line\" )\ndone < <( grep\
+        \ kernel: collated/machine_files/* | cut -d \":\" -f3 | sort --unique )\n\n\
+        for x in \"${KERNELS[@]}\"; do\n    echo Kernel Version: $x >> reports/${DATE}-kernel-summary.txt\n\
+        \    echo + Number of VMs: $(grep -nl $x collated/machine_files/* | wc -l)\
+        \ >> reports/${DATE}-kernel-summary.txt\ndone"
+    keepgoing: false
+    strategy: node-first
+  timeout: 10m
+  uuid: 0ad04d19-36fb-4c71-9e58-3fed8b5e5142

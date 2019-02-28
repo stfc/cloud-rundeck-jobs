@@ -1,0 +1,76 @@
+- defaultTab: output
+  description: A query to get the general patching state of all cloud VMs owned by a given user
+  executionEnabled: true
+  group: Pakiti-Jobs/Queries
+  id: faa97157-ad39-4cc1-85d3-47d19b37b5b9
+  loglevel: INFO
+  loglimit: 100MB
+  loglimitAction: halt
+  name: User-VM-State
+  nodeFilterEditable: false
+  options:
+  - description: Defaults to user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: Openstack domain - either stfc or default
+    label: Openstack domain of user
+    name: UserDomain
+    required: true
+    value: default
+  - description: The Username to lookup
+    label: Openstack User Name
+    name: UserName
+    required: true
+    value: admin
+  retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#!/bin/bash\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nDATE=\"\"\nEMAIL_ADDRESS=\"\"\nMACHINES=()\nPROJECTNAME=\"\"\n\nif [[ !\
+        \ -e \"reports\" ]]; then\n    echo \"No Reports Directory Found - Creating...\"\
+        \n    mkdir \"reports\"\nfi    \n\nDATE=$(date +%Y%m%d-%H%M)\n\nEMAIL_ADDRESS=$(openstack\
+        \ user show --domain @option.UserDomain@ @option.UserName@ | grep email |\
+        \ cut -d \"|\" -f3 | awk '{$1=$1};1')\n\ntouch reports/${DATE}-@option.UserName@.txt\n\
+        \necho \"General VM Patching State Report for Openstack User - @option.UserName@\"\
+        \ > reports/${DATE}-@option.UserName@.txt\n\necho \"User Contact Email - $EMAIL_ADDRESS\"\
+        \ >> reports/${DATE}-@option.UserName@.txt\n\necho Number Of VMs Collated:\
+        \ $(grep -wnl \"user_name:@option.UserName@\" collated/machine_files/* | wc\
+        \ -l) >> reports/${DATE}-@option.UserName@.txt\n\necho Not Reporting to Pakiti:\
+        \ $(grep -wnl \"user_name:@option.UserName@\" collated/machine_files/* | xargs\
+        \ grep -wnl \"No Host Information Reported to Pakiti\" | wc -l) >> reports/${DATE}-@option.UserName@.txt\n\
+        \necho No Information \"(192 address only)\": $(grep -wnl \"user_name:@option.UserName@\"\
+        \ collated/machine_files/* | xargs grep -wnl \"No Usable Hostname - No Pakiti\
+        \ Information Available for Machine\" | wc -l) >> reports/${DATE}-@option.UserName@.txt\n\
+        \necho Machines with Out of Date Packages: $(grep -wnl \"user_name:@option.UserName@\"\
+        \ collated/machine_files/* | xargs grep -nl \"package:\" | wc -l) >> reports/${DATE}-@option.UserName@.txt\n\
+        \necho Machines with CVEs: $(grep -wnl \"user_name:@option.UserName@\" collated/machine_files/*\
+        \ | xargs grep -nl \"CVE:\" | wc -l) >> reports/${DATE}-@option.UserName@.txt\n\
+        \nwhile IFS= read -r line; do\n    MACHINES+=( \"$line\" )\ndone < <( grep\
+        \ -wnl \"user_name:@option.UserName@\" collated/machine_files/* | cut -d \"\
+        /\" -f3 | cut -d \".\" -f1 )\n\nfor x in \"${MACHINES[@]}\"; do\n    echo\
+        \ Machine ID: $x >> reports/${DATE}-@option.UserName@.txt\n    echo + Machine\
+        \ Name: $(grep \"machine_name:\" collated/machine_files/${x}.txt | cut -d\
+        \ \":\" -f2) >> reports/${DATE}-@option.UserName@.txt\n    echo + Kernel Version:\
+        \ $(grep \"kernel:\" collated/machine_files/${x}.txt | cut -d \":\" -f2) >>\
+        \ reports/${DATE}-@option.UserName@.txt\n    echo + Number of Packages: $(grep\
+        \ \"package:\" collated/machine_files/${x}.txt | cut -d \":\" -f2 | wc -l)\
+        \ >> reports/${DATE}-@option.UserName@.txt\n    echo + Number of CVEs: $(grep\
+        \ \"CVE:\" collated/machine_files/${x}.txt | cut -d \":\" -f2 | wc -l) >>\
+        \ reports/${DATE}-@option.UserName@.txt\ndone"
+    keepgoing: false
+    strategy: node-first
+  timeout: 10m
+  uuid: faa97157-ad39-4cc1-85d3-47d19b37b5b9

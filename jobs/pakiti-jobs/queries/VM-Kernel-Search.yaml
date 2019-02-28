@@ -1,0 +1,39 @@
+- defaultTab: output
+  description: A Specific Kernel Search that will return Machine Details
+  executionEnabled: true
+  group: Pakiti-Jobs/Queries
+  id: 81c2cb11-a08e-42e3-bd14-484d18fe618c
+  loglevel: INFO
+  loglimit: 100MB
+  loglimitAction: halt
+  name: VM-Kernel-Search
+  nodeFilterEditable: false
+  options:
+  - description: The Kernel version to search for (Please preserve quotation marks)
+    label: Kernel Version
+    name: KernelVersion
+    required: true
+    value: '"3.10.0-862.14.4.el7.x86_64"'
+  retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#!/bin/bash\n\nDATE=\"\"\n\nif [[ ! -e \"reports\" ]]; then\n    echo\
+        \ \"No Reports Directory Found - Creating...\"\n    mkdir \"reports\"\nfi\
+        \    \n\nDATE=$(date +%Y%m%d-%H%M)\nMACHINES=()\n\ntouch reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
+        \necho \"VMs Running Kernel Version @option.KernelVersion@\" > reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
+        \nwhile IFS= read -r line; do\n    MACHINES+=( \"$line\" )\ndone < <( grep\
+        \ -nl @option.KernelVersion@ collated/machine_files/* | cut -d \"/\" -f3 |\
+        \ cut -d \".\" -f1 )\n\nfor x in \"${MACHINES[@]}\"; do\n    echo Machine\
+        \ ID: $(grep $x collated/machine_files/${x}.txt | cut -d \":\" -f2) >> reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
+        \    echo + Machine Name: $(grep machine_name collated/machine_files/${x}.txt\
+        \ | cut -d \":\" -f2) >> reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
+        \    echo + Openstack Username: $(grep user_name collated/machine_files/${x}.txt\
+        \ | cut -d \":\" -f2) >> reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
+        \    echo + User Email Address: $(grep email: collated/machine_files/${x}.txt\
+        \ | cut -d \":\" -f2) >> reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
+        done"
+    keepgoing: false
+    strategy: node-first
+  timeout: 10m
+  uuid: 81c2cb11-a08e-42e3-bd14-484d18fe618c

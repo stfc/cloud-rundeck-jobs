@@ -1,0 +1,39 @@
+- defaultTab: output
+  description: A Specific Package Search that will return Machine Details
+  executionEnabled: true
+  group: Pakiti-Jobs/Queries
+  id: 92696a43-58ba-4b65-a853-337d1abe0ad2
+  loglevel: INFO
+  loglimit: 100MB
+  loglimitAction: halt
+  name: VM-Package-Search
+  nodeFilterEditable: false
+  options:
+  - description: Package Name
+    label: Package Name
+    name: PackageName
+    required: true
+    value: kernel
+  retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#!/bin/bash\n\nDATE=\"\"\n\nif [[ ! -e \"reports\" ]]; then\n    echo\
+        \ \"No Reports Directory Found - Creating...\"\n    mkdir \"reports\"\nfi\
+        \    \n\nDATE=$(date +%Y%m%d-%H%M)\nMACHINES=()\n\ntouch reports/${DATE}-package-@option.PackageName@.txt\n\
+        \necho \"VMs that Need @option.PackageName@ Updating\" > reports/${DATE}-package-@option.PackageName@.txt\n\
+        \nwhile IFS= read -r line; do\n    MACHINES+=( \"$line\" )\ndone < <( grep\
+        \ -nl package:@option.CVENumber@ collated/machine_files/* | cut -d \"/\" -f3\
+        \ | cut -d \".\" -f1 )\n\nfor x in \"${MACHINES[@]}\"; do\n    echo Machine\
+        \ ID: $(grep $x collated/machine_files/${x}.txt | cut -d \":\" -f2) >> reports/${DATE}-package-@option.PackageName@.txt\n\
+        \    echo + Machine Name: $(grep machine_name collated/machine_files/${x}.txt\
+        \ | cut -d \":\" -f2) >> reports/${DATE}-package-@option.PackageName@.txt\n\
+        \    echo + Openstack Username: $(grep user_name collated/machine_files/${x}.txt\
+        \ | cut -d \":\" -f2) >> reports/${DATE}-package-@option.PackageName@.txt\n\
+        \    echo + User Email Address: $(grep email: collated/machine_files/${x}.txt\
+        \ | cut -d \":\" -f2) >> reports/${DATE}-package-@option.PackageName@.txt\n\
+        done"
+    keepgoing: false
+    strategy: node-first
+  timeout: 10m
+  uuid: 92696a43-58ba-4b65-a853-337d1abe0ad2
