@@ -3,7 +3,7 @@
     This job runs every 2 hours, listing all openstack projects not including rally/
     monitoring and heat stack projects
   executionEnabled: true
-  group: Openstack/Utilities/Testing/Pakiti/Scheduled
+  group: Pakiti-Jobs/Scheduled
   id: 686d0cfa-b082-4469-bbab-e5aef3e6d216
   loglevel: INFO
   loglimit: 100MB
