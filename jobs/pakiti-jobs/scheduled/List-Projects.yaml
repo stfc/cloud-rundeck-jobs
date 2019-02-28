@@ -1,0 +1,76 @@
+- defaultTab: output
+  description: |-
+    This job runs every 2 hours, listing all openstack projects not including rally/
+    monitoring and heat stack projects
+  executionEnabled: true
+  group: Openstack/Utilities/Testing/Pakiti/Scheduled
+  id: 686d0cfa-b082-4469-bbab-e5aef3e6d216
+  loglevel: INFO
+  loglimit: 100MB
+  loglimitAction: halt
+  name: List-Projects
+  nodeFilterEditable: false
+  options:
+  - description: |-
+      Password for Openstack user admin-rundeck
+      The password is stored locally and securely within Rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  retry: '0'
+  schedule:
+    dayofmonth:
+      day: '*'
+    month: '*'
+    time:
+      hour: 0/2
+      minute: '0'
+      seconds: '0'
+    year: '*'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#!/bin/bash\n\n#Info: For more information/comments for this section\
+        \ please view any\n#openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nDELETE=()\nLISTED_PROJECTS=()\nPROJECTS=()\n\nif [[ ! -e \"list_files\"\
+        \ ]]; then\n        echo \"No Lists Directory Found - Creating...\"\n    \
+        \    mkdir \"list_files\"\nfi\n\necho \"Collating Active Projects...\"\n\n\
+        while IFS= read -r line; do\n    PROJECTS+=( \"$line\" )\ndone < <( openstack\
+        \ project list | grep -v \"\\-\\-\" | grep -v \"Name\" | grep -v \"rally\"\
+        \ | grep -v \"844e2997d93448949b16aed975995837\" | cut -d \"|\" -f2 | awk\
+        \ '{$1=$1};1' )\n\nif [[ ! -e \"list_files/project_list.txt\" ]]; then\n \
+        \   echo \"No Project List File Found - Creating...\"\n    touch \"list_files/project_list.txt\"\
+        \n    for x in \"${PROJECTS[@]}\"; do\n        echo \"Adding Project $x to\
+        \ List File\"\n        echo \"$x\" >> \"list_files/project_list.txt\"\n  \
+        \  done\nelse\n    echo \"Project List File Found - Checking Projects...\"\
+        \n    for x in \"${PROJECTS[@]}\"; do\n        if  grep -xq $x \"list_files/project_list.txt\"\
+        ; then\n            echo \"Project $x Exists in List File\"\n        else\n\
+        \            echo \"Project $x Does Not Exist in List File - Adding...\"\n\
+        \            echo \"$x\" >> \"list_files/project_list.txt\"\n        fi\n\
+        \    done\n    echo \"Gathering Listed Projects...\"\n    while IFS= read\
+        \ -r line; do\n        LISTED_PROJECTS+=( \"$line\" )\n    done < <( cat list_files/project_list.txt\
+        \ | head -c -1 )\n    echo \" + Checking For Deleted Projects...\"\n    for\
+        \ x in \"${LISTED_PROJECTS[@]}\"; do\n        openstack project show $x &>\
+        \ /dev/null\n        if [[ $? == 1 ]]; then\n            DELETE+=$x\n    \
+        \    fi\n    done\n    if [[ ${#DELETE[@]} -eq 0 ]]; then\n        echo \"\
+        \ + No Projects to Remove\"\n    else\n        for x in \"${DELETE[@]}\";\
+        \ do\n            echo \" + Removing Project $x from List File...\"\n    \
+        \        touch temp-project.txt\n            grep -v $x list_files/project_list.txt\
+        \ >> temp-project.txt \n            mv temp-project.txt list_files/project_list.txt\n\
+        \        done\n    fi\nfi\n\necho \"Current Projects List Collated and Up\
+        \ to Date\""
+    keepgoing: false
+    strategy: node-first
+  timeout: 10m
+  uuid: 686d0cfa-b082-4469-bbab-e5aef3e6d216
