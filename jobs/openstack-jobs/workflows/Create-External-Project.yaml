@@ -1,0 +1,261 @@
+- defaultTab: output
+  description: "This workflow will create a private project in its entirety including:\n\
+    Project Creation,\nSecurity Group Creation,\nNetwork, Subnet, and Router Creation\
+    \ and Association,\nFloating IP Creation,\nUser Association.\nIf more than one\
+    \ network is required - Please use the inividual utilities to \nadjust the project\
+    \ post creation"
+  executionEnabled: true
+  group: Openstack-Jobs/Workflows
+  id: b5a41175-0f1d-430c-8ff7-7f0b3dce1791
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: truncate
+  name: Create-External-Project
+  nodeFilterEditable: false
+  options:
+  - description: password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: "Description of the project to be created (please apply quotations\
+      \ or remove \nspaces)"
+    label: Project Description
+    name: ProjectDescription
+    required: true
+    value: '"Rundeck Default Project"'
+  - description: "Name of the project to be created. (please apply quotations or remove\
+      \ spaces)\nDefaults to Rundeck Default - A project used to make cleanup easier\
+      \ in the \nevent of mistakes."
+    label: Project Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Default'
+  - delimiter: ' '
+    description: |
+      Openstack administrators
+      By default this adds only the global admin
+    label: Administrators
+    multivalued: true
+    name: AdminUsers
+    required: true
+    value: admin
+  - delimiter: ' '
+    description: |
+      Openstack Local Users
+      By default this adds only the default rundeck user
+    label: Local Users
+    multivalued: true
+    name: LocalUsers
+    required: true
+    value: user-rundeck
+  - delimiter: ' '
+    description: |-
+      Adds openstack STFC users
+      None are added by default
+    label: STFC Users
+    multivalued: true
+    name: STFCUsers
+  - description: Name of the Network to be created
+    label: Network Name
+    name: NetworkName
+    required: true
+    value: '"Rundeck Default - Private"'
+  - description: A description of the network to be created
+    label: Network Description
+    name: NetworkDescription
+    required: true
+    value: '"Network Description"'
+  - description: Name of the subnet to be created
+    label: Subnet Name
+    name: SubnetName
+    required: true
+    value: '"Rundeck Default - Subnet"'
+  - description: Description of the subnet to be created
+    label: Subnet Description
+    name: SubnetDescription
+    required: true
+    value: '"Rundeck default private subnet"'
+  - description: Name of the router to be created
+    label: RouterName
+    name: RouterName
+    required: true
+    value: '"Rundeck Default - Router"'
+  - description: A description of the router to be created
+    label: Router Description
+    name: RouterDescription
+    required: true
+    value: '"Router Description"'
+  - description: The number of Floating IP addresses to assign to a project
+    label: Number of IP Addresses
+    name: NumberOfIPs
+    required: true
+    value: '5'
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#Info: For more information/comments for this section please view any\n\
+        #openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nif [[ -n @option.ProjectName@ && -n @option.ProjectDescription@ ]]; then\n\
+        \    if [[ `openstack project list | grep @option.ProjectName@ | wc -l` ==\
+        \ 0 ]];\n        then\n        openstack project create --domain default --description\
+        \ \\\n            @option.ProjectDescription@ @option.ProjectName@;\n    \
+        \    echo \"Success.\"\n    else\n        echo \"Project Exists - Details\
+        \ to Follow:\";\n        openstack project show @option.ProjectName@;\n  \
+        \      echo \"Exiting\";\n        exit;\n    fi\nelse\n    echo \"Project\
+        \ Name or Description values not set\";\n    echo \"Exiting\";\n    exit;\n\
+        fi\n\nif [[ -n @option.ProjectName@ ]]; then\n    for i in @option.AdminUsers@\n\
+        \        do\n            openstack user show --domain default $i > /dev/null;\n\
+        \            if [[ `echo $?` == 0 ]]; then\n                openstack role\
+        \ add --user $i --project @option.ProjectName@ \\\n                    admin;\n\
+        \                echo \"User $i successfully added to project \\\n       \
+        \             @option.ProjectName@ as administrator, Details below:\"\n  \
+        \              openstack role assignment list --project @option.ProjectName@\
+        \ \\\n                    --user $i --user-domain default --names --role admin;\n\
+        \            else\n                echo \"User does not exist, please add\
+        \ user before trying again\";\n                echo \"Exiting.\";\n      \
+        \      fi\n        done\nelse\n    echo \"Incomplete information provided,\
+        \ unable to complete job.\";\n    echo \"Exiting\";\nfi\n\nif [[ -n @option.ProjectName@\
+        \ ]]; then\n    for i in @option.LocalUsers@\n        do \n            openstack\
+        \ user show --domain default $i > /dev/null;\n            if [[ `echo $?`\
+        \ == 0 ]]; then\n                openstack role add --user $i --project @option.ProjectName@\
+        \ \\\n                    user;\n                echo \"User $i successfully\
+        \ added to project \\\n                    @option.ProjectName@ as user, Details\
+        \ below:\";\n                openstack role assignment list --project @option.ProjectName@\
+        \ \\\n                    --user $i --user-domain default --names --role user;\n\
+        \            else\n                echo \"User does not exist, please add\
+        \ user before trying again\";\n                echo \"Exiting\";\n       \
+        \     fi\n        done\nelse\n    echo \"Incomplete information provided,\
+        \ unable to complete job.\";\n    echo \"Exiting\";\nfi\n\nif [[ -n @option.ProjectName@\
+        \ ]]; then\n    for i in @option.STFCUsers@\n        do\n            openstack\
+        \ user show --domain stfc $i >/dev/null;\n            if [[ `echo $?` == 0\
+        \ ]]; then\n                openstack role add --user $i --user-domain stfc\
+        \ --project \\\n                    @option.ProjectName@ user;\n         \
+        \       echo \"User $i successfully added to project \\\n                \
+        \    @option.ProjectName@ as user, Details below:\";\n                openstack\
+        \ role assignment list --project @option.ProjectName@ \\\n               \
+        \     --user $i --user-domain stfc --names --role user;\n            else\n\
+        \                echo \"User $i does not exist, please check for the user\
+        \ \\\n                    manually\";\n                echo \"Exiting\";\n\
+        \            fi\n        done\nelse\n    echo \"Incomplete information provided,\
+        \ unable to complete job.\";\n    echo \"Exiting\";\nfi\n\nif [[ -n @option.ProjectName@\
+        \ && -n @option.NetworkName@ && \\\n    -n @option.NetworkDescription@ ]];\
+        \ then\n    openstack network create --project @option.ProjectName@ --description\
+        \ \\\n        @option.NetworkDescription@ --enable-port-security \\\n    \
+        \    --provider-network-type vxlan --internal @option.NetworkName@;\n    echo\
+        \ \"Success\";\nelse\n    echo \"Insufficient information provided\";\n  \
+        \  echo \"Exiting\";\nfi\n\nIN_USE=( $(openstack subnet list | grep 192.168.\
+        \ | cut -d \"|\" -f5 | \\\n    awk '{$1=$1};1' | sort | cut -d \".\" -f3)\
+        \ );\n    \nAVAILABLE=();\n\nfor x in $(seq 1 254)\n    do\n        AVAILABILITY=\"\
+        AVAILABLE\";\n        for i in ${IN_USE[@]}\n            do \n           \
+        \     if [[ $i == $x ]]; then\n                    AVAILABILITY=\"UNAVAILABLE\"\
+        \n                fi\n            done\n        if [[ $AVAILABILITY == \"\
+        AVAILABLE\" ]]; then\n            AVAILABLE+=(\"192.168.$x.0/24\");\n    \
+        \    fi\n        AVAILABILITY=\"AVAILABLE\";\n    done\n\nSIZE=${#AVAILABLE[@]}\n\
+        \nINDEX=$(( $RANDOM % $SIZE ))\n\nSUBNET_RANGE=${AVAILABLE[$INDEX]}\n\nBYTE3=(\
+        \ $(echo $SUBNET_RANGE | cut -d \".\" -f3 | awk '{$1=$1};1') )\n\nSUBNET_START=\"\
+        192.168.$BYTE3.10\"\n\nSUBNET_END=\"192.168.$BYTE3.254\"\n\nSUBNET_GATEWAY=\"\
+        192.168.$BYTE3.1\"\n\nif [[ -n @option.ProjectName@ && -n @option.SubnetName@\
+        \ && -n \\\n    @option.SubnetDescription@ && -n @option.NetworkName@ ]];\
+        \ then\n    openstack subnet create @option.SubnetName@ --network @option.NetworkName@\
+        \ \\\n        --description @option.SubnetDescription@ --subnet-range $SUBNET_RANGE\
+        \ \\\n        --allocation-pool start=$SUBNET_START,end=$SUBNET_END --dhcp\
+        \ --gateway \\\n        $SUBNET_GATEWAY\n    echo \"Success\";\nelse\n   \
+        \ echo \"Insufficient information provided\";\n    echo \"Exiting\";\nfi\n\
+        \nif [[ -n @option.ProjectName@ && -n @option.RouterName@ && -n \\\n    @option.RouterDescription@\
+        \ ]]; then\n    openstack router create --project @option.ProjectName@ --distributed\
+        \ \\\n        --description @option.RouterDescription@ @option.RouterName@\n\
+        \    echo \"Success\";\nelse\n    echo \"Insufficient information provided\"\
+        ;\n    echo \"Exiting\";\nfi\n\nif [[ -n @option.SubnetName@ && -n @option.RouterName@\
+        \ ]]; then\n    openstack router set @option.RouterName@ --external-gateway\
+        \ External;\n    openstack router add subnet @option.RouterName@ @option.SubnetName@;\n\
+        \    echo \"Success\";\nelse\n    echo \"Insufficient information provided\"\
+        ;\n    echo \"Exiting\";\nfi\n\nopenstack quota set --secgroup-rules 200 @option.ProjectName@;\n\
+        echo \"Security group rule quota for project @option.ProjectName@ has been\
+        \ \\\n    increased to 200.\"\n\nif [[ -n @option.ProjectName@ ]]; then\n\
+        \    echo \"Please note, error 409 messages will appear if a security group\
+        \ rule \\\n        already exists, this is normal behoviour and will not affect\
+        \ the job \\\n        outcome.;\"\n    SECURITY_GROUP=$(openstack security\
+        \ group list --project \\\n        @option.ProjectName@ | grep -v \"\\-\\\
+        -\" | grep -v \"ID\" | grep \"default\"| \\\n        cut -d\"|\" -f2);\n \
+        \   openstack security group rule create --project @option.ProjectName@ \\\
+        \n        --ingress --ethertype IPv4 --protocol ICMP --remote-ip 0.0.0.0/0\
+        \ \\\n        $SECURITY_GROUP;\n    openstack security group rule create --project\
+        \ @option.ProjectName@ \\\n        --egress --ethertype IPv4 --protocol ICMP\
+        \ --remote-ip 0.0.0.0/0 \\\n        $SECURITY_GROUP;\n    openstack security\
+        \ group rule create --project @option.ProjectName@ \\\n        --ingress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 22:22 --remote-ip \\\n        0.0.0.0/0 $SECURITY_GROUP;\n\
+        \    openstack security group rule create --project @option.ProjectName@ \\\
+        \n        --egress --ethertype IPv4 --protocol TCP --dst-port 53:53 --remote-ip\
+        \ \\\n        130.246.0.0/16 $SECURITY_GROUP;\n    openstack security group\
+        \ rule create --project @option.ProjectName@ \\\n        --ingress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 53:53 --remote-ip \\\n        130.246.0.0/16\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --egress --ethertype IPv4 --protocol TCP --dst-port 80:80 --remote-ip\
+        \ \\\n        130.246.180.101/32 $SECURITY_GROUP;\n    openstack security\
+        \ group rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n        130.246.180.163/32\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --ingress --ethertype IPv4 --protocol TCP --dst-port 80:80 --remote-ip\
+        \ \\\n        130.246.180.13/32 $SECURITY_GROUP;\n    openstack security group\
+        \ rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n        130.246.180.13/32\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --ingress --ethertype IPv4 --protocol TCP --dst-port 80:9999\
+        \ \\\n        --remote-ip 130.246.223.126/32 $SECURITY_GROUP;\n    openstack\
+        \ security group rule create --project @option.ProjectName@ \\\n        --ingress\
+        \ --ethertype IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n      \
+        \  130.246.180.101/32 $SECURITY_GROUP;\n    openstack security group rule\
+        \ create --project @option.ProjectName@ \\\n        --ingress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 80:80 --remote-ip \\\n        130.246.186.163/32\
+        \ $SECURITY_GROUP;\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --egress --ethertype IPv4 --protocol TCP --dst-port 443:443\
+        \ \\\n        --remote-ip 130.246.180.101/32 $SECURITY_GROUP;\n    openstack\
+        \ security group rule create --project @option.ProjectName@ \\\n        --egress\
+        \ --ethertype IPv4 --protocol TCP --dst-port 9999:9999 \\\n        --remote-ip\
+        \ 130.246.223.126/32 $SECURITY_GROUP;\n    openstack security group rule create\
+        \ --project @option.ProjectName@ \\\n        --egress --ethertype IPv4 --protocol\
+        \ UDP --dst-port 53:53 --remote-ip \\\n        130.246.0.0/16 $SECURITY_GROUP;\n\
+        \    openstack security group rule create --project @option.ProjectName@ \\\
+        \n        --ingress --ethertype IPv4 --protocol UDP --dst-port 53:53 --remote-ip\
+        \ \\\n        130.246.0.0/16 $SECURITY_GROUP;\n    openstack security group\
+        \ rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol TCP --dst-port 443:443 \\\n        --remote-ip 130.246.176.0/22\
+        \ $SECURITY_GROUP;\n    for j in tcp udp ;\n    do\n\t    for i in \"8.0.0.0/7\"\
+        \ \"192.170.0.0/15\" \"172.64.0.0/10\" \"192.160.0.0/13\" \\\n\t        \"\
+        192.169.0.0/16\" \"192.176.0.0/12\" \"192.128.0.0/11\" \"173.0.0.0/8\" \\\n\
+        \t        \"172.0.0.0/12\"  \"130.248.0.0/12\" \"193.0.0.0/8\"  \"130.247.0.0/16\"\
+        \ \\\n\t        \"32.0.0.0/3\" \"131.0.0.0/8\" \"196.0.0.0/6\" \"176.0.0.0/4\"\
+        \ \\\n\t        \"128.0.0.0/7\" \"174.0.0.0/7\" \"144.0.0.0/4\" \"172.128.0.0/9\"\
+        \ \\\n\t        \"192.172.0.0/14\" \"192.192.0.0/10\" \"208.0.0.0/4\"  \"\
+        194.0.0.0/7\" \\\n\t        \"168.0.0.0/6\" \"132.0.0.0/6\" \"192.0.0.0/9\"\
+        \ \"160.0.0.0/5\" \\\n\t        \"172.32.0.0/11\" \"12.0.0.0/6\" \"16.0.0.0/4\"\
+        \ \"130.128.0.0/10\" \\\n\t        \"130.224.0.0/12\" \"130.0.0.0/9\" \"64.0.0.0/2\"\
+        \ \"130.244.0.0/15\" \\\n\t        \"200.0.0.0/5\" \"130.240.0.0/14\" \"11.0.0.0/8\"\
+        \ \"130.192.0.0/11\" \\\n\t        \"136.0.0.0/5\" \"0.0.0.0/5\";\n\t    do\n\
+        \t\t    openstack security group rule create --project \\\n\t\t        @option.ProjectName@\
+        \ --egress --ethertype IPv4 --protocol $j \\\n\t\t        --dst-port 1:65535\
+        \ --remote-ip $i $SECURITY_GROUP\n\t    done\n    done\nelse\n    echo \"\
+        Incomplete Infromation Provided, unable to carry out job\";\n    echo \"Exiting\"\
+        ;\n    exit;\nfi\n\nif [[ -n @option.ProjectName@ && -n @option.NumberOfIPs@\
+        \ ]]; then\n    for x in {1..@option.NumberOfIPs@}\n        do\n         \
+        \   openstack floating ip create --project @option.ProjectName@ \\\n     \
+        \           External;\n        done\nelse\n    echo \"Values not set\";\n\
+        \    echo \"Exiting\";\n    exit;\nfi"
+    keepgoing: false
+    strategy: node-first
+  timeout: 1h
+  uuid: b5a41175-0f1d-430c-8ff7-7f0b3dce1791

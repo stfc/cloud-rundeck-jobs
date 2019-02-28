@@ -1,0 +1,181 @@
+- defaultTab: output
+  description: Full Internal Project Creation Process
+  executionEnabled: true
+  group: Openstack-Jobs/Workflows
+  id: 002dc9a6-3912-4fa6-87b0-e948e602298f
+  loglevel: INFO
+  loglimit: 250MB
+  loglimitAction: halt
+  name: Create-Internal-Project
+  nodeFilterEditable: false
+  options:
+  - description: Password for openstack user admin-rundeck
+    label: Openstack Administrator Password
+    name: OpenstackAdminPassword
+    required: true
+    secure: true
+    storagePath: keys/cloud/admins/admin-rundeck
+    valueExposed: true
+  - description: |-
+      Name of the project to be created. (please apply quotations or remove spaces)
+      Defaults to Rundeck Quarantine - A project used to make cleanup easier in the
+      event of mistakes
+    label: Project Name
+    name: ProjectName
+    required: true
+    value: '"Rundeck Quarantine"'
+  - description: Description of project to be created (please apply quotations or remove spaces)
+    label: Project Description
+    name: ProjectDescription
+    required: true
+    value: '"Rundeck Quarantine Project"'
+  - description: |-
+      Openstack Network ID or Name (ID Preferred, if using name that has spaces please
+      use quotations) Defaults to Internal network ID
+    label: Network ID
+    name: NetworkID
+    required: true
+    value: 5be315b7-7ebd-4254-97fe-18c1df501538
+  - delimiter: ' '
+    description: Openstack Administrators - Default adds only the global admin
+    label: Administrators
+    multivalued: true
+    name: AdminUsers
+    required: true
+    value: admin admin-rundeck
+  - delimiter: ' '
+    description: Openstack local domain users, default adds user-rundeck
+    label: Local Users
+    multivalued: true
+    name: LocalUsers
+    required: true
+    value: user-rundeck
+  - delimiter: ' '
+    description: Adds Openstack STFC Users - None by Default
+    label: STFC Users
+    multivalued: true
+    name: STFCUsers
+  retry:
+    delay: '0'
+    retry: '0'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: "#Info: For more information/comments for this section please view any\n\
+        #openstack api file\n\nexport OS_AUTH_URL=https://openstack.stfc.ac.uk:5000/v3\n\
+        export OS_PROJECT_ID=4de86830e89b4a46b590536571b6ccd4\nexport OS_PROJECT_NAME=\"\
+        admin\"\nexport OS_USER_DOMAIN_NAME=\"default\"\n\nif [ -z \"$OS_USER_DOMAIN_NAME\"\
+        \ ]; then unset OS_USER_DOMAIN_NAME; fi\n\nexport OS_PROJECT_DOMAIN_ID=\"\
+        38372510d9bb4ac7916178b062d387de\"\n\nif [ -z \"$OS_PROJECT_DOMAIN_ID\" ];\
+        \ then unset OS_PROJECT_DOMAIN_ID; fi\n\nunset OS_TENANT_ID\nunset OS_TENANT_NAME\n\
+        \nexport OS_USERNAME=\"admin-rundeck\"\nexport OS_PASSWORD=@option.OpenstackAdminPassword@\n\
+        export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
+        \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
+        \nif [[ -n @option.ProjectName@ && -n @option.ProjectDescription@ ]]; then\n\
+        \    if [[ `openstack project list | grep @option.ProjectName@ | wc -l` ==\
+        \ 0 ]];\n        then\n        openstack project create --domain default --description\
+        \ \\\n            @option.ProjectDescription@ @option.ProjectName@;\n    \
+        \    echo \"Success.\"\n    else\n        echo \"Project Exists - Details\
+        \ to Follow:\";\n        openstack project show @option.ProjectName@;\n  \
+        \      echo \"Exiting\";\n        exit;\n    fi\nelse\n    echo \"Project\
+        \ Name or Description values not set\";\n    echo \"Exiting\";\n    exit;\n\
+        fi\n\nif [[ -n @option.ProjectName@ && -n @option.NetworkID@ ]]; then\n  \
+        \  if [[ `openstack project list | grep @option.ProjectName@  | wc -l` ==\
+        \ 1 ]];\n        then\n        if [[ `openstack network list | grep @option.NetworkID@\
+        \ | \\\n            wc -l` == 1 ]]; then\n            openstack network rbac\
+        \ create --target-project \\\n                @option.ProjectName@ --type\
+        \ network --action access_as_shared \\\n                @option.NetworkID@;\n\
+        \            if [[ `echo $?` == 0 ]]; then\n                echo \"Success\"\
+        ;\n            else\n                echo \"Network RBAC rule already exists\"\
+        ;\n            fi\n        else\n            echo \"Network @option.NetworkID@\
+        \ Does not Exist . Please Create it \\\n                and Try Again.\";\n\
+        \            echo \"Exiting\";\n            exit;\n        fi\n    else\n\
+        \        echo \"Project @option.ProjectName@ Does not Exist. Please Create\
+        \ it \\\n            and Try Again.\";\n        if [[ `openstack network list\
+        \ | grep @option.NetworkID@ | \\\n            wc -l` == 1 ]]; then\n     \
+        \       echo \"Network @option.NetworkID@ Does not Exist . Please Create it\
+        \ \\\n                and Try Again.\";\n        fi\n        echo \"Exiting\"\
+        ;\n        exit;\n    fi\nelse\n    echo \"Project Name or Description values\
+        \ not set\";\n    echo \"Exiting\";\n    exit;\nfi\n\nif [[ -n @option.ProjectName@\
+        \ ]]; then\n    echo \"Please note, error 409 messages will appear if a security\
+        \ group rule \\\n        already exists, this is normal behaviour and will\
+        \ not affect the job \\\n        outcome.\";\n    SECURITY_GROUP=$(openstack\
+        \ security group list --project \\\n        @option.ProjectName@ | grep -v\
+        \ \"\\-\\-\" | grep -v \"ID\" | grep \"default\" | \\\n        cut -d \"|\"\
+        \ -f2 );\n    openstack security group rule create --project @option.ProjectName@\
+        \ \\\n        --ingress --ethertype IPv4 --protocol ICMP --remote-ip 0.0.0.0/0\
+        \ \\\n        $SECURITY_GROUP;\n    openstack security group rule create --project\
+        \ @option.ProjectName@ \\\n        --egress --ethertype IPv4 --protocol ICMP\
+        \ --remote-ip 0.0.0.0/0 \\\n        $SECURITY_GROUP;\n    openstack security\
+        \ group rule create --project @option.ProjectName@ \\\n        --egress --ethertype\
+        \ IPv4 --protocol UDP --remote-ip 0.0.0.0/0 \\\n        $SECURITY_GROUP;\n\
+        \    openstack security group rule create --project @option.ProjectName@ \\\
+        \n        --egress --ethertype IPv4 --protocol TCP --remote-ip 0.0.0.0/0 \\\
+        \n        $SECURITY_GROUP;\n    openstack security group rule create --project\
+        \ @option.ProjectName@ \\\n        --ingress --ethertype IPv4 --protocol TCP\
+        \ --dst-port 22:22 --remote-ip \\\n        0.0.0.0/0 $SECURITY_GROUP;\n  \
+        \  openstack security group rule create --project @option.ProjectName@ \\\n\
+        \        --ingress --ethertype IPv4 --protocol UDP --dst-port 7777:7777 \\\
+        \n        --remote-ip 0.0.0.0/0 $SECURITY_GROUP;\n    if [[ `openstack security\
+        \ group list --project @option.ProjectName@ | \\\n        grep -w HTTP | wc\
+        \ -l` == 0 ]]; then\n        HTTP_SECURITY_GROUP=$(openstack security group\
+        \ create --project \\\n            @option.ProjectName@ HTTP | grep \" id\
+        \ \" | cut -d\"|\" -f3);\n        openstack security group rule create --project\
+        \ @option.ProjectName@ \\\n            --ingress --ethertype IPv4 --protocol\
+        \ TCP --dst-port 80:80 \\\n            --remote-ip 0.0.0.0/0 $HTTP_SECURITY_GROUP;\n\
+        \    else\n        echo \"At Least one HTTP Security Group Already Exists\
+        \ for this \\\n            Project - Details to Follow:\";\n        openstack\
+        \ security group show $(openstack security group list \\\n            --project\
+        \ @option.ProjectName@ | grep -w HTTP | cut -d \"|\" -f2 | \\\n          \
+        \  awk '{$1=$1};1' | head -n 1);\n    fi\n    if [[ `openstack security group\
+        \ list --project @option.ProjectName@ | \\\n        grep -w HTTPS | wc -l`\
+        \ == 0 ]]; then\n        HTTPS_SECURITY_GROUP=$(openstack security group create\
+        \ --project \\\n            @option.ProjectName@  HTTPS | grep \" id \" |\
+        \ cut -d\"|\" -f3);\n        openstack security group rule create --project\
+        \ @option.ProjectName@  \\\n            --ingress --ethertype IPv4 --protocol\
+        \ TCP --dst-port 443:443 \\\n            --remote-ip 0.0.0.0/0 $HTTPS_SECURITY_GROUP;\n\
+        \    else\n        echo \"At Least one HTTPS Security Group Already Exists\
+        \ for this \\\n            Project - Details to Follow:\";\n        openstack\
+        \ security group show $(openstack security group list \\\n            --project\
+        \ @option.ProjectName@ | grep -w HTTPS | cut -d \"|\" -f2 \\\n           \
+        \ | awk '{$1=$1};1' | head -n 1);\n    fi\nelse\n    echo \"Project Name value\
+        \ not set\";\n    echo \"Exiting\";\n    exit;\nfi\n\nif [[ -n @option.ProjectName@\
+        \ ]]; then\n    for i in @option.AdminUsers@\n        do\n            openstack\
+        \ user show --domain default $i > /dev/null;\n            if [[ `echo $?`\
+        \ == 0 ]]; then\n                openstack role add --user $i --project @option.ProjectName@\
+        \ \\\n                    admin;\n                echo \"User $i successfully\
+        \ added to project \\\n                    @option.ProjectName@ as administrator,\
+        \ Details below:\"\n                openstack role assignment list --project\
+        \ @option.ProjectName@ \\\n                    --user $i --user-domain default\
+        \ --names --role admin;\n            else\n                echo \"User does\
+        \ not exist, please add user before trying again\";\n                echo\
+        \ \"Exiting.\";\n            fi\n        done\nelse\n    echo \"Incomplete\
+        \ information provided, unable to complete job.\";\n    echo \"Exiting\";\n\
+        fi\n\nif [[ -n @option.ProjectName@ ]]; then\n    for i in @option.LocalUsers@\n\
+        \        do \n            openstack user show --domain default $i > /dev/null;\n\
+        \            if [[ `echo $?` == 0 ]]; then\n                openstack role\
+        \ add --user $i --project @option.ProjectName@ \\\n                    user;\n\
+        \                echo \"User $i successfully added to project \\\n       \
+        \             @option.ProjectName@ as user, Details below:\";\n          \
+        \      openstack role assignment list --project @option.ProjectName@ \\\n\
+        \                    --user $i --user-domain default --names --role user;\n\
+        \            else\n                echo \"User does not exist, please add\
+        \ user before trying again\";\n                echo \"Exiting\";\n       \
+        \     fi\n        done\nelse\n    echo \"Incomplete information provided,\
+        \ unable to complete job.\";\n    echo \"Exiting\";\nfi\n\nif [[ -n @option.ProjectName@\
+        \ ]]; then\n    for i in @option.STFCUsers@\n        do\n            openstack\
+        \ user show --domain stfc $i >/dev/null;\n            if [[ `echo $?` == 0\
+        \ ]]; then\n                openstack role add --user $i --user-domain stfc\
+        \ --project \\\n                    @option.ProjectName@ user;\n         \
+        \       echo \"User $i successfully added to project \\\n                \
+        \    @option.ProjectName@ as administrator, Details below:\";\n          \
+        \      openstack role assignment list --project @option.ProjectName@ \\\n\
+        \                    --user $i --user-domain stfc --names --role user;\n \
+        \           else\n                echo \"User $i does not exist, please check\
+        \ for the user \\\n                    manually\";\n                echo \"\
+        Exiting\";\n            fi\n        done\nelse\n    echo \"Incomplete information\
+        \ provided, unable to complete job.\";\n    echo \"Exiting\";\nfi "
+    keepgoing: false
+    strategy: node-first
+  timeout: 15m
+  uuid: 002dc9a6-3912-4fa6-87b0-e948e602298f
