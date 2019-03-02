@@ -10,6 +10,7 @@
   loglevel: INFO
   loglimit: 250MB
   loglimitAction: truncate
+  loglimitStatus: failed
   name: Create-External-Project
   nodeFilterEditable: false
   options:
@@ -18,7 +19,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   - description: "Description of the project to be created (please apply quotations\
       \ or remove \nspaces)"
@@ -250,11 +251,15 @@
         \ --egress --ethertype IPv4 --protocol $j \\\n\t\t        --dst-port 1:65535\
         \ --remote-ip $i $SECURITY_GROUP\n\t    done\n    done\nelse\n    echo \"\
         Incomplete Infromation Provided, unable to carry out job\";\n    echo \"Exiting\"\
-        ;\n    exit;\nfi\n\nif [[ -n @option.ProjectName@ && -n @option.NumberOfIPs@\
-        \ ]]; then\n    for x in {1..@option.NumberOfIPs@}\n        do\n         \
-        \   openstack floating ip create --project @option.ProjectName@ \\\n     \
-        \           External;\n        done\nelse\n    echo \"Values not set\";\n\
-        \    echo \"Exiting\";\n    exit;\nfi"
+        ;\n    exit;\nfi\n\nif [[ -n @option.ProjectName@ && -n @option.NetworkName@\
+        \ ]]; then\n    openstack network rbac create --action access_as_shared --target-project\
+        \ \\\n        @option.ProjectName@ --type network @option.NetworkName@\nelse\n\
+        \    echo \"Incomplete Infromation Provided, unable to carry out job\";\n\
+        \    echo \"Exiting\";\n    exit;        \nfi\n\nif [[ -n @option.ProjectName@\
+        \ && -n @option.NumberOfIPs@ ]]; then\n    for x in {1..@option.NumberOfIPs@}\n\
+        \        do\n            openstack floating ip create --project @option.ProjectName@\
+        \ \\\n                External;\n        done\nelse\n    echo \"Values not\
+        \ set\";\n    echo \"Exiting\";\n    exit;\nfi"
     keepgoing: false
     strategy: node-first
   timeout: 1h
