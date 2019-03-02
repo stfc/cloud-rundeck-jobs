@@ -6,6 +6,7 @@
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: VM-Package-Search
   nodeFilterEditable: false
   options:
@@ -14,6 +15,11 @@
     name: PackageName
     required: true
     value: kernel
+  - description: Email address to send report to
+    label: Email Address
+    name: EmailAddress
+    required: true
+    value: cloud-support@gridpp.rl.ac.uk
   retry: '0'
   scheduleEnabled: true
   sequence:
@@ -21,7 +27,7 @@
     - script: "#!/bin/bash\n\nDATE=\"\"\n\nif [[ ! -e \"reports\" ]]; then\n    echo\
         \ \"No Reports Directory Found - Creating...\"\n    mkdir \"reports\"\nfi\
         \    \n\nDATE=$(date +%Y%m%d-%H%M)\nMACHINES=()\n\ntouch reports/${DATE}-package-@option.PackageName@.txt\n\
-        \necho \"VMs that Need @option.PackageName@ Updating\" > reports/${DATE}-package-@option.PackageName@.txt\n\
+        \necho \"VMs that need package @option.PackageName@ Updating\" > reports/${DATE}-package-@option.PackageName@.txt\n\
         \nwhile IFS= read -r line; do\n    MACHINES+=( \"$line\" )\ndone < <( grep\
         \ -nl package:@option.CVENumber@ collated/machine_files/* | cut -d \"/\" -f3\
         \ | cut -d \".\" -f1 )\n\nfor x in \"${MACHINES[@]}\"; do\n    echo Machine\
@@ -32,7 +38,8 @@
         \ | cut -d \":\" -f2) >> reports/${DATE}-package-@option.PackageName@.txt\n\
         \    echo + User Email Address: $(grep email: collated/machine_files/${x}.txt\
         \ | cut -d \":\" -f2) >> reports/${DATE}-package-@option.PackageName@.txt\n\
-        done"
+        done\n\necho '' | mailx -s 'Package summary for @option.PackageName@' -a reports/${DATE}-package-@option.PackageName@.txt\
+        \ @option.EmailAddress@"
     keepgoing: false
     strategy: node-first
   timeout: 10m

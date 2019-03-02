@@ -6,6 +6,7 @@
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: Specific-VM-State
   nodeFilterEditable: false
   options:
@@ -19,8 +20,13 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
+  - description: 'The email address to send the report to '
+    label: Email Address
+    name: EmailAddress
+    required: true
+    value: cloud-support@gridpp.rl.ac.uk
   retry: '0'
   scheduleEnabled: true
   sequence:
@@ -37,7 +43,9 @@
         \nDATE=\"\"\nMACHINE_NAME=\"\"\n\nif [[ ! -e \"reports\" ]]; then\n    echo\
         \ \"No Reports Directory Found - Creating...\"\n    mkdir \"reports\"\nfi\
         \    \n\nDATE=$(date +%Y%m%d-%H%M)\n\n#copy the machine file\n\ntouch reports/${DATE}-VM-@option.MachineID@.txt\n\
-        \ncp collated/machine_files/@option.MachineID@.txt reports/${DATE}-VM-@option.MachineID@.txt"
+        \ncp collated/machine_files/@option.MachineID@.txt reports/${DATE}-VM-@option.MachineID@.txt\n\
+        \necho '' | mailx -s 'Project VM Info Query for VM @option.MachineID@' -a\
+        \ reports/${DATE}-VM-@option.MachineID@.txt @option.EmailAddress@"
     keepgoing: false
     strategy: node-first
   timeout: 10m

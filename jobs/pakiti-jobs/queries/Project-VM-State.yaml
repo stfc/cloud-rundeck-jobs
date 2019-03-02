@@ -6,6 +6,7 @@
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: Project-VM-State
   nodeFilterEditable: false
   options:
@@ -14,13 +15,18 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   - description: 'The Id of the project you want information on. '
     label: Openstack Project ID
     name: ProjectID
     required: true
     value: 4de86830e89b4a46b590536571b6ccd4
+  - description: The email address to the send the report to
+    label: Email Address
+    name: EmailAddress
+    required: true
+    value: cloud-support@gridpp.rl.ac.uk
   retry: '0'
   scheduleEnabled: true
   sequence:
@@ -38,23 +44,22 @@
         \    echo \"No Reports Directory Found - Creating...\"\n    mkdir \"reports\"\
         \nfi    \n\nDATE=$(date +%Y%m%d-%H%M)\n\nPROJECTNAME=$(openstack project show\
         \ @option.ProjectID@ | grep name | cut -d \"|\" -f3 | awk '{$1=$1};1')\n\n\
-        touch reports/${DATE}-@option.ProjectID@.txt\n\necho \"General VM Patching\
-        \ State Report for Project - $PROJECTNAME\"> reports/${DATE}-@option.ProjectID@.txt\n\
+        touch reports/${DATE}-project-@option.ProjectID@.txt\n\necho \"General VM\
+        \ Patching State Report for Project - $PROJECTNAME\"> reports/${DATE}-@option.ProjectID@.txt\n\
         \necho Number Of VMs Collated: $(grep -wnl @option.ProjectID@ collated/machine_files/*\
-        \ | wc -l) >> reports/${DATE}-@option.ProjectID@.txt\n\necho Not Reporting\
-        \ to Pakiti: $(grep -wnl @option.ProjectID@ collated/machine_files/* | xargs\
-        \ grep -wnl \"No Host Information Reported to Pakiti\" | wc -l) >> reports/${DATE}-@option.ProjectID@.txt\n\
-        \necho \"No Information (192 address only)\": $(grep -wnl @option.ProjectID@\
-        \ collated/machine_files/* | xargs grep -wnl \"No Usable Hostname - No Pakiti\
-        \ Information Available for Machine\" | wc -l) >> reports/${DATE}-@option.ProjectID@.txt\n\
+        \ | wc -l) >> reports/${DATE}-project-@option.ProjectID@.txt\n\necho Not Reporting\
+        \ to Pakiti: $(grep -rL @option.ProjectID@ collated/machine_files/* | xargs\
+        \ grep -wnl \"No Host Information Reported to Pakiti\" | wc -l) >> reports/${DATE}-project-@option.ProjectID@.txt\n\
         \necho Machines with Out of Date Packages: $(grep -wnl @option.ProjectID@\
-        \ collated/machine_files/* | xargs grep -nl \"package:\" | wc -l) >> reports/${DATE}-@option.ProjectID@.txt\n\
+        \ collated/machine_files/* | xargs grep -nl \"package:\" | wc -l) >> reports/${DATE}-project-@option.ProjectID@.txt\n\
         \necho Machines with CVEs: $(grep -wnl @option.ProjectID@ collated/machine_files/*\
-        \ | xargs grep -nl \"CVE:\" | wc -l) >> reports/${DATE}-@option.ProjectID@.txt\n\
+        \ | xargs grep -nl \"CVE:\" | wc -l) >> reports/${DATE}-project-@option.ProjectID@.txt\n\
         \nwhile IFS= read -r line; do\n    EMAILS+=( \"$line\" )\ndone < <( grep -wnl\
         \ @option.ProjectID@ collated/machine_files/* | xargs grep email | cut -d\
         \ \":\" -f3 | sort --unique )\n\nfor x in \"${EMAILS[@]}\"; do\n    echo User\
-        \ Email: $x >> reports/${DATE}-@option.ProjectID@.txt\ndone"
+        \ Email: $x >> reports/${DATE}-project-@option.ProjectID@.txt\ndone\n\necho\
+        \ '' | mailx -s 'Project VM Infor Query for project @option.ProjectID@' -a\
+        \ reports/${DATE}-project-@option.ProjectID@.txt @option.EmailAddress@"
     keepgoing: false
     strategy: node-first
   timeout: 10m

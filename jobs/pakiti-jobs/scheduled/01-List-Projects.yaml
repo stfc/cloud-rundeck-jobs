@@ -8,8 +8,17 @@
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
-  name: List-Projects
+  loglimitStatus: failed
+  name: 01-List-Projects
   nodeFilterEditable: false
+  notification:
+    onfailure:
+      email:
+        attachLog: true
+        attachLogInFile: true
+        recipients: jacob.ward@stfc.ac.uk
+        subject: Failed Project List Job on dev-rundeck
+  notifyAvgDurationThreshold: null
   options:
   - description: |-
       Password for Openstack user admin-rundeck
@@ -18,7 +27,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   retry: '0'
   schedule:

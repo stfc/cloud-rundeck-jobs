@@ -8,8 +8,17 @@
   loglevel: INFO
   loglimit: 500MB
   loglimitAction: halt
-  name: Machine-Details
+  loglimitStatus: failed
+  name: 03-Machine-Details
   nodeFilterEditable: false
+  notification:
+    onfailure:
+      email:
+        attachLog: true
+        attachLogInFile: true
+        recipients: jacob.ward@stfc.ac.uk
+        subject: Machine Details Failure on dev-rundeck.nubes.rl.ac.uk
+  notifyAvgDurationThreshold: null
   options:
   - description: |-
       Password for Openstack user admin-rundeck
@@ -18,7 +27,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   retry: '0'
   schedule:
@@ -44,17 +53,17 @@
         export OS_REGION_NAME=\"RegionOne\"\n\nif [ -z \"$OS_REGION_NAME\" ]; then\
         \ unset OS_REGION_NAME; fi\n\nexport OS_INTERFACE=public\nexport OS_IDENTITY_API_VERSION=3\n\
         \nexport SSL_DIR=\"/var/lib/rundeck/nss2\"\n\nCVES=()\nHOST_NAMEs=()\nIP_ADDRESSES=()\n\
-        MACHINES=()\nPACKAGES=()\nPAKITI_FOUND=\"\"\nPROJECT_FILES=()\nRELEVANT_FILE=\"\
-        \"\nUSER_ID=\"\"\nVERSION_INSTALLED=()\nVERSION_REQUIRED=()\n\nif [[ ! -e\
-        \ \"project_files\" ]]; then\n\techo \"No Project Directory Found - Please\
-        \ Run Initialisation Script - get_machines.sh\"\n    echo \" + Exiting Job...\"\
-        \n\texit\nfi\n\nif [[ ! -e \"machine_files\" ]]; then\n\techo \"No Machine\
-        \ Directory Found - Creating...\"\n\tmkdir \"machine_files\"\nelse\n\techo\
-        \ \"Resetting Machine Files...\"\n\trm -rf machine_files/\n\tmkdir \"machine_files\"\
-        \nfi\n\nwhile IFS= read -r line; do\n\tPROJECT_FILES+=( \"$line\" )\ndone\
-        \ < <( ls -w 1 project_files/ | head -c -1 )\n\necho \"Compiling List of Machines...\"\
-        \n\nfor x in \"${PROJECT_FILES[@]}\"; do\n\twhile IFS= read -r line; do\n\t\
-        \tMACHINES+=( \"$line\" )\n\tdone < <( cat project_files/$x | head -c -1 )\n\
+        MACHINES=()\nPACKAGES=()\nPROJECT_FILES=()\nRELEVANT_FILE=\"\"\nUSER_ID=\"\
+        \"\nVERSION_INSTALLED=()\nVERSION_REQUIRED=()\n\nif [[ ! -e \"project_files\"\
+        \ ]]; then\n\techo \"No Project Directory Found - Please Run Initialisation\
+        \ Script - get_machines.sh\"\n    echo \" + Exiting Job...\"\n\texit\nfi\n\
+        \nif [[ ! -e \"machine_files\" ]]; then\n\techo \"No Machine Directory Found\
+        \ - Creating...\"\n\tmkdir \"machine_files\"\nelse\n\techo \"Resetting Machine\
+        \ Files...\"\n\trm -rf machine_files/\n\tmkdir \"machine_files\"\nfi\n\nwhile\
+        \ IFS= read -r line; do\n\tPROJECT_FILES+=( \"$line\" )\ndone < <( ls -w 1\
+        \ project_files/ | head -c -1 )\n\necho \"Compiling List of Machines...\"\n\
+        \nfor x in \"${PROJECT_FILES[@]}\"; do\n\twhile IFS= read -r line; do\n\t\t\
+        MACHINES+=( \"$line\" )\n\tdone < <( cat project_files/$x | head -c -1 )\n\
         done\n\ntouch \"temp.txt\"\ntouch \"curl.txt\"\n\nfor x in \"${MACHINES[@]}\"\
         ; do\n\tif [[ ! -e \"machine_files/${x}.txt\" ]]; then\n\t\topenstack server\
         \ show $x | grep -e \"id\" -e \"name\" -e \"addresses\" | grep -v \"OS-EXT\"\
@@ -82,10 +91,12 @@
         \ $y | awk '{print \"host-\" $0}' | sed 's/\\./-/g' | awk '{print $0 \".nubes.stfc.ac.uk\"\
         }' | head -c -1) >> \"machine_files/${x}.txt\"\n\t\t\t\techo potential-hostname:$(cat\
         \ temp.txt | grep -w \"name\" | cut -d \"|\" -f3 | awk '{$1=$1};1' | awk '{print\
-        \ $0 \".novalocal\"}' | head -c -1) >> \"machine_files/${x}.txt\"\n\t\t\t\
-        done\n\t\t\tIP_ADDRESSES=()\n\t\t\techo project_id:$(cat temp.txt | grep -w\
-        \ \"project_id\" | cut -d \"|\" -f3 | awk '{$1=$1};1') >> \"machine_files/${x}.txt\"\
-        \n\t\t\techo project_name:$(openstack project show $(cat machine_files/${x}.txt\
+        \ $0 \".novalocal\"}' | head -c -1) >> \"machine_files/${x}.txt\"\n\t\t\t\t\
+        echo potential-hostname:$(cat temp.txt | grep -w \"name\" | cut -d \"|\" -f3\
+        \ | awk '{$1=$1};1' | head -c -1) >> \"machine_files/${x}.txt\"\n\t\t\tdone\n\
+        \t\t\tIP_ADDRESSES=()\n\t\t\techo project_id:$(cat temp.txt | grep -w \"project_id\"\
+        \ | cut -d \"|\" -f3 | awk '{$1=$1};1') >> \"machine_files/${x}.txt\"\n\t\t\
+        \techo project_name:$(openstack project show $(cat machine_files/${x}.txt\
         \ | grep -w \"project_id\" | cut -d \":\" -f2) | grep \"name\" | cut -d \"\
         |\" -f3 | awk '{$1=$1};1') >> \"machine_files/${x}.txt\"\n\t\t\techo user_id:$(cat\
         \ temp.txt | grep -w \"user_id\" | cut -d \"|\" -f3 | awk '{$1=$1};1') >>\
@@ -102,18 +113,18 @@
         \ | cut -d \"|\" -f3 | awk '{$1=$1};1' | head -c -1) >> \"machine_files/${x}.txt\"\
         \n\t\t\t\techo email:$(openstack user show --domain default $USER_ID | grep\
         \ -w email | cut -d \"|\" -f3 | awk '{$1=$1};1') >> \"machine_files/${x}.txt\"\
-        \n\t\t\tfi\n\t\t\techo \"PAKITI INFORMATION FOLLOWS\" >> \"machine_files/${x}.txt\"\
-        \n\t\t\twhile IFS= read line; do\n\t\t\t\tHOST_NAMES+=( \"$line\" )\n\t\t\t\
-        done < <(cat machine_files/${x}.txt | grep \"potential-hostname:\" | cut -d\
-        \ \":\" -f2)\n\t\t\tPAKITI_FOUND=\"FALSE\"\n\t\t\tfor y in \"${HOST_NAMES[@]}\"\
-        ; do\n\t\t\t\tcurl -ksS --cert myUkCaCertficate -o curl.txt \"https://pakiti-1.gridpp.rl.ac.uk/pakiti/host.php?h=$y\"\
-        \n\t\t\t\tif [[ $(cat curl.txt | wc -l) -gt 74 ]] && [[ $PAKITI_FOUND == \"\
-        FALSE\" ]]; then\n\t\t\t\t    PAKITI_FOUND=\"TRUE\"\n\t\t\t\t\techo kernel:$(cat\
-        \ curl.txt | grep -Pzo '(?<=Kernel:<\\/i> )(.*)(?=<\\/td>)') >> \"machine_files/${x}.txt\"\
-        \n\t\t\t\t\twhile IFS= read line; do \n\t\t\t\t\t\tPACKAGES+=( \"$line\" )\n\
-        \t\t\t\t\tdone < <( cat curl.txt | grep -Pzo '(?<=(&nbsp;){2})(?!(.*href))(.*)(?=<\\\
-        /a>)' )\n\t\t\t\t\twhile IFS= read line; do\n\t\t\t\t\t\tVERSION_INSTALLED+=(\
-        \ \"$line\" )\n\t\t\t\t\tdone < <( cat curl.txt | grep -Pzo '(?<=<td>)((?!<a)(?!<span)(?!<div)(?!<i))(.*)(?=<\\\
+        \n\t\t\tfi\n\t\t\t\n\t\t\twhile IFS= read line; do\n\t\t\t\tHOST_NAMES+=(\
+        \ \"$line\" )\n\t\t\tdone < <(cat machine_files/${x}.txt | grep \"potential-hostname:\"\
+        \ | cut -d \":\" -f2)\n\t\t\tfor y in \"${HOST_NAMES[@]}\"; do\n\t\t\t\tcurl\
+        \ -ksS --cert myUkCaCertficate -o curl.txt \"https://pakiti-1.gridpp.rl.ac.uk/pakiti/host.php?h=$y\"\
+        \n\t\t\t\tif [[ $(cat curl.txt | wc -l) -gt 74 ]]; then\n\t\t\t\t    echo\
+        \ \"PAKITI INFORMATION FOLLOWS\" >> \"machine_files/${x}.txt\"\n\t\t\t\t\t\
+        echo kernel:$(cat curl.txt | grep -Pzo '(?<=Kernel:<\\/i> )(.*)(?=<\\/td>)')\
+        \ >> \"machine_files/${x}.txt\"\n\t\t\t\t\twhile IFS= read line; do \n\t\t\
+        \t\t\t\tPACKAGES+=( \"$line\" )\n\t\t\t\t\tdone < <( cat curl.txt | grep -Pzo\
+        \ '(?<=(&nbsp;){2})(?!(.*href))(.*)(?=<\\/a>)' )\n\t\t\t\t\twhile IFS= read\
+        \ line; do\n\t\t\t\t\t\tVERSION_INSTALLED+=( \"$line\" )\n\t\t\t\t\tdone <\
+        \ <( cat curl.txt | grep -Pzo '(?<=<td>)((?!<a)(?!<span)(?!<div)(?!<i))(.*)(?=<\\\
         /td>)' )\n\t\t\t\t\twhile IFS= read line; do\n\t\t\t\t\t\tVERSION_REQUIRED+=(\
         \ \"$line\" )\n\t\t\t\t\tdone < <( cat curl.txt | grep -Pzo '(?<=\">)(\\d.*)(?=<\\\
         /span><\\/td>)' )\n\t\t\t\t\tfor z in \"${!PACKAGES[@]}\"; do\n\t\t\t\t\t\t\
@@ -125,16 +136,14 @@
         \tCVES+=( \"$line\" )\n\t\t\t\t\tdone < <( cat curl.txt | grep -Pzo '(?<=\"\
         >CVE-)(\\d{4}-\\d*)(?=<\\/span>)' )\n\t\t\t\t\tfor z in \"${!CVES[@]}\"; do\n\
         \t\t\t\t\t\techo CVE:${CVES[$z]} >> \"machine_files/${x}.txt\"\n\t\t\t\t\t\
-        done\n\t\t\t\t\tCVES=()\n\t\t\t\tfi\n\t\t\tdone\n\t\t\tif [[ $PAKITI_FOUND\
-        \ -eq \"FALSE\" ]]; then\n\t\t\t    echo \"pakiti_general:No Host Information\
-        \ Reported to Pakiti\" >> \"machine_files/${x}.txt\"\n\t\t\tfi\n\t\t\tPAKITI_FOUND=\"\
-        FALSE\"\n\t\t\tHOST_NAMES=()\n\t\t\tperl -pi -e 'chomp if eof' machine_files/${x}.txt\
-        \ &>/dev/null\n\t\telse\n\t\t\techo \" + Machine has been Deleted Since Creation\
-        \ of Lists - Skipping...\"\n\t\tfi\n\telse\n\t\techo \"Machine File for $x\
-        \ already Exists - Skipping...\"\n\tfi\t\t\ndone\n\nrm temp.txt\nrm curl.txt\n\
-        \nrm -rf collated/\n\nmkdir collated\n\ncp -R list_files/ collated/list_files/\n\
-        cp -R project_files/ collated/project_files/\ncp -R machine_files/ collated/machine_files/\n\
-        \necho \"Machine Information Collated..\""
+        done\n\t\t\t\t\tCVES=()\n\t\t\t\tfi\n\t\t\tdone\n\t\t\tHOST_NAMES=()\n\t\t\
+        \tperl -pi -e 'chomp if eof' machine_files/${x}.txt &>/dev/null\n\t\telse\n\
+        \t\t\techo \" + Machine has been Deleted Since Creation of Lists - Skipping...\"\
+        \n\t\tfi\n\telse\n\t\techo \"Machine File for $x already Exists - Skipping...\"\
+        \n\tfi\t\t\ndone\n\nrm temp.txt\nrm curl.txt\n\nrm -rf collated/\n\nmkdir\
+        \ collated\n\ncp -R list_files/ collated/list_files/\ncp -R project_files/\
+        \ collated/project_files/\ncp -R machine_files/ collated/machine_files/\n\n\
+        echo \"Machine Information Collated..\""
     keepgoing: false
     strategy: node-first
   timeout: 2h

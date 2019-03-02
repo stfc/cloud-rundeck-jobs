@@ -6,8 +6,15 @@
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: General-VM-State
   nodeFilterEditable: false
+  options:
+  - description: Email address to send completed logs to
+    label: Email Address
+    name: EmailAddress
+    required: true
+    value: cloud-support@gridpp.rl.ac.uk
   retry: '0'
   scheduleEnabled: true
   sequence:
@@ -17,14 +24,13 @@
         \    \n\nDATE=$(date +%Y%m%d-%H%M)\n\ntouch reports/${DATE}-general.txt\n\n\
         echo General VM Patching State Report > reports/${DATE}-general.txt\n\necho\
         \ Number Of VMs Collated: $(ls collated/machine_files/ | wc -l) >> reports/${DATE}-general.txt\n\
-        \necho Not Reporting to Pakiti: $(grep -wnl \"No Host Information Reported\
-        \ to Pakiti\" collated/machine_files/* | wc -l) >> reports/${DATE}-general.txt\n\
-        \necho \"No Information (192 address only)\": $(grep -wnl \"No Usable Hostname\
-        \ - No Pakiti Information Available for Machine\" collated/machine_files/*\
-        \ | wc -l) >> reports/${DATE}-general.txt\n\necho Machines with Out of Date\
-        \ Packages: $(grep -nl \"package:\" collated/machine_files/* | wc -l) >> reports/${DATE}-general.txt\n\
-        \necho Machines with CVEs: $(grep -nl \"CVE:\" collated/machine_files/* |\
-        \ wc -l) >> reports/${DATE}-general.txt"
+        \necho Not Reporting to Pakiti: $(grep -rL \"PAKITI INFORMATION FOLLOWS\"\
+        \ collated/machine_files/* | wc -l) >> reports/${DATE}-general.txt\n\necho\
+        \ Machines with Out of Date Packages: $(grep -nl \"package:\" collated/machine_files/*\
+        \ | wc -l) >> reports/${DATE}-general.txt\n\necho Machines with CVEs: $(grep\
+        \ -nl \"CVE:\" collated/machine_files/* | wc -l) >> reports/${DATE}-general.txt\n\
+        \necho '' | mailx -s 'General VM Info Query' -a reports/${DATE}-general.txt\
+        \ @option.EmailAddress@"
     keepgoing: false
     strategy: node-first
   timeout: 10m

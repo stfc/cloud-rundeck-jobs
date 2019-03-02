@@ -1,11 +1,14 @@
 - defaultTab: output
-  description: A Specific Kernel Search that will return Machine Details
+  description: |-
+    A Specific Kernel Search that will return Machine Details
+    Does not work reliably with partial or shortened kernel version numbers
   executionEnabled: true
   group: Pakiti-Jobs/Queries
   id: 81c2cb11-a08e-42e3-bd14-484d18fe618c
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: VM-Kernel-Search
   nodeFilterEditable: false
   options:
@@ -14,6 +17,11 @@
     name: KernelVersion
     required: true
     value: '"3.10.0-862.14.4.el7.x86_64"'
+  - description: Email address to send report to
+    label: Email Address
+    name: EmailAddress
+    required: true
+    value: cloud-support@gridpp.rl.ac.uk
   retry: '0'
   scheduleEnabled: true
   sequence:
@@ -32,7 +40,8 @@
         \ | cut -d \":\" -f2) >> reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
         \    echo + User Email Address: $(grep email: collated/machine_files/${x}.txt\
         \ | cut -d \":\" -f2) >> reports/${DATE}-kernel-@option.KernelVersion@.txt\n\
-        done"
+        done\n\necho '' | mailx -s 'Kernel search report for Kernel version @option.KernelVersion@'\
+        \ -a reports/${DATE}-kernel-@option.KernelVersion@.txt @option.EmailAddress@"
     keepgoing: false
     strategy: node-first
   timeout: 10m

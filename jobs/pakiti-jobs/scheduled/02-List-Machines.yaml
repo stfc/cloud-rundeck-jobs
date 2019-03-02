@@ -8,8 +8,17 @@
   loglevel: INFO
   loglimit: 500MB
   loglimitAction: halt
-  name: List-Machines
+  loglimitStatus: failed
+  name: 02-List-Machines
   nodeFilterEditable: false
+  notification:
+    onfailure:
+      email:
+        attachLog: true
+        attachLogInFile: true
+        recipients: jacob.ward@stfc.ac.uk
+        subject: Machine List Job Failure on Dev-Rundeck.nues.rl.ac.uk
+  notifyAvgDurationThreshold: null
   options:
   - description: |-
       Password for Openstack user admin-rundeck
@@ -18,7 +27,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   retry: '0'
   schedule:

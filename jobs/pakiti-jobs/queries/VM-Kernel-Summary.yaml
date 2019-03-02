@@ -6,8 +6,15 @@
   loglevel: INFO
   loglimit: 100MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: VM-Kernel-Summary
   nodeFilterEditable: false
+  options:
+  - description: Email address to send report to
+    label: Email Address
+    name: EmailAddress
+    required: true
+    value: cloud-support@gridpp.rl.ac.uk
   retry: '0'
   scheduleEnabled: true
   sequence:
@@ -20,7 +27,9 @@
         \ kernel: collated/machine_files/* | cut -d \":\" -f3 | sort --unique )\n\n\
         for x in \"${KERNELS[@]}\"; do\n    echo Kernel Version: $x >> reports/${DATE}-kernel-summary.txt\n\
         \    echo + Number of VMs: $(grep -nl $x collated/machine_files/* | wc -l)\
-        \ >> reports/${DATE}-kernel-summary.txt\ndone"
+        \ >> reports/${DATE}-kernel-summary.txt\ndone\n\necho '' | mailx -s 'Kernel\
+        \ version summary for all reporting openstack VMs' -a reports/${DATE}-kernel-summary.txt\
+        \ @option.EmailAddress@"
     keepgoing: false
     strategy: node-first
   timeout: 10m
