@@ -1,7 +1,5 @@
 - defaultTab: output
-  description: |-
-    This utility performs the initial project creation command:
-    openstack project command
+  description: This utility associate floating IPs to a project
   executionEnabled: true
   group: Openstack-Jobs/Utilities
   id: f8358208-20a8-4c9c-93e3-085a3858f788
@@ -9,7 +7,7 @@
   loglimit: 250MB
   loglimitAction: truncate
   loglimitStatus: '''Log Limit Reached (250MB)'''
-  name: Create-Floating-IP-Addresses
+  name: Associate-Floating-IP-Addresses
   nodeFilterEditable: false
   options:
   - description: Password for openstack user admin-rundeck
@@ -17,7 +15,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   - description: |-
       Name of the project to be created. (please apply quotations or remove spaces)

@@ -1,7 +1,5 @@
 - defaultTab: output
-  description: |-
-    This utility performs the initial project creation command:
-    openstack project command
+  description: This utility performs the initial project creation command ONLY
   executionEnabled: true
   group: Openstack-Jobs/Utilities
   id: bc889c5e-1564-4dba-9373-b3d1259cca7e
@@ -17,7 +15,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   - description: |-
       Name of the project to be created. (please apply quotations or remove spaces)

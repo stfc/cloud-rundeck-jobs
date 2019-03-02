@@ -9,6 +9,7 @@
   loglevel: INFO
   loglimit: 250MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: Assign-Local-Users-To-Project
   nodeFilterEditable: false
   options:
@@ -19,7 +20,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-rundeck
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   - description: "Name of the project to be created. (please apply quotations or remove\
       \ spaces) \nDefaults to Rundeck Default - A project used to make cleanup easier\

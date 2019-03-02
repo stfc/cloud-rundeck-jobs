@@ -1,11 +1,14 @@
 - defaultTab: output
-  description: Adds an External Security Group to an Existing Project
+  description: |-
+    Adds an External Security Group to an Existing Project
+    IMPORTANT - only to be used when a project already has a security group
   executionEnabled: true
   group: Openstack-Jobs/Utilities
   id: d0ceb97e-aa18-47ca-b845-a2b8ec1da9b2
   loglevel: INFO
   loglimit: 250MB
   loglimitAction: halt
+  loglimitStatus: failed
   name: Add-New-External-Security-Group
   nodeFilterEditable: false
   options:
@@ -14,7 +17,7 @@
     name: OpenstackAdminPassword
     required: true
     secure: true
-    storagePath: keys/cloud/admins/admin-jmm67114
+    storagePath: keys/admins/admin-rundeck
     valueExposed: true
   - description: |-
       Name of the target project. (please apply quotations or remove spaces)
