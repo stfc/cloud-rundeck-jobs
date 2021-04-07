@@ -60,8 +60,13 @@ def OutputToConsole(results_dict_list):
 def OutputToFile(filepath, results_dict_list):
     """ function to output a list of dictionaries into a file """
     if results_dict_list:
+
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+
         keys = results_dict_list[0].keys()
-        with open(filepath, "w", newline="\n") as output_file:
+        timestamp = "{:%Y-%m-%d_%H:%M}".format(datetime.datetime.now())
+        with open(filepath+"{}_search_output.txt".format(timestamp), "w", newline="\n") as output_file:
             writer = csv.DictWriter(output_file, keys)
             writer.writeheader()
             writer.writerows(results_dict_list)
@@ -70,6 +75,11 @@ def OutputToFile(filepath, results_dict_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Get Information From Openstack')
+
+    parser.add_argument("--no-output", default=False, action="store_true")
+    parser.add_argument("--save", default=False, action="store_true")
+    parser.add_argument("--save-in", type=str, default="./Logs/")
+
     search_by_subparser = parser.add_subparsers(dest='search_by_subparser',
     description="Choose What to Search For:")
 
@@ -135,6 +145,8 @@ if __name__ == '__main__':
         "host_id","host_name","project_id","project_name"
     ])
 
+
+
     args = parser.parse_args()
     conn = openstack.connect(cloud_name="openstack", region_name="RegionOne")
 
@@ -156,6 +168,11 @@ if __name__ == '__main__':
         list_obj = list_class(conn, criteria_list=criteria_list, property_list=args.select)
         selected_items = list_obj.listItems()
         res = list_obj.getProperties(selected_items)
+
         if args.sort_by:
             res = sorted(res, key = lambda a: a[args.sort_by])
-        OutputToConsole(res)
+
+        if not args.no_output:
+            OutputToConsole(res)
+        if args.save:
+            OutputToFile(args.save_in, res)
