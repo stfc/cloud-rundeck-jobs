@@ -80,6 +80,9 @@ if __name__ == '__main__':
     ])
     user_parser.add_argument('-w', "--where", nargs="+", action='append',
     help="selection policy", metavar=('policy', '*args'))
+    user_parser.add_argument("--sort-by", nargs="?", choices=[
+        "user_id","user_name","user_email"
+    ])
 
     server_parser = search_by_subparser.add_parser("server", help="Search By Servers")
     server_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
@@ -90,6 +93,11 @@ if __name__ == '__main__':
     ])
     server_parser.add_argument('-w', "--where", nargs="+", action='append',
     help="selection policy", metavar=('policy', '*args'))
+    server_parser.add_argument("--sort-by", nargs="?", choices=[
+        "user_id","user_name","user_email", "host_id", "host_name", "server_id",
+        "server_name", "server_status","server_creation_date", "project_id",
+        "project_name"
+    ])
 
     project_parser = search_by_subparser.add_parser("project", help="Search By Project")
     project_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
@@ -98,6 +106,9 @@ if __name__ == '__main__':
     ])
     project_parser.add_argument('-w', "--where", nargs="+", action='append',
     help="selection policy", metavar=('policy', '*args'))
+    project_parser.add_argument("--sort-by", nargs="?", choices=[
+        "project_id", "project_name", "project_description"
+    ])
 
     ip_parser = search_by_subparser.add_parser("ip", help="Search By Ips")
     ip_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
@@ -107,6 +118,10 @@ if __name__ == '__main__':
     ])
     ip_parser.add_argument('-w', "--where", nargs="+", action='append',
     help="selection policy", metavar=('policy', '*args'))
+    ip_parser.add_argument("--sort-by", nargs="?", choices=[
+        "ip_id","ip_fixed_address","ip_floating_address","ip_port_id",
+        "project_id","project_name"
+    ])
 
     host_parser = search_by_subparser.add_parser("host", help="Search By Host")
     host_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
@@ -115,6 +130,10 @@ if __name__ == '__main__':
     ])
     host_parser.add_argument('-w', "--where", nargs="+", action='append',
     help="selection policy", metavar=('policy', '*args'))
+    host_parser.add_argument("--sort-by", nargs="?",
+    choices=[
+        "host_id","host_name","project_id","project_name"
+    ])
 
     args = parser.parse_args()
     conn = openstack.connect(cloud_name="openstack", region_name="RegionOne")
@@ -137,4 +156,6 @@ if __name__ == '__main__':
         list_obj = list_class(conn, criteria_list=criteria_list, property_list=args.select)
         selected_items = list_obj.listItems()
         res = list_obj.getProperties(selected_items)
+        if args.sort_by:
+            res = sorted(res, key = lambda a: a[args.sort_by])
         OutputToConsole(res)

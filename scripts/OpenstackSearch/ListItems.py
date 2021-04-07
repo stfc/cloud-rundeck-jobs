@@ -1,3 +1,4 @@
+import operator
 
 class ListItems:
     def __init__(self, conn, search_func, criteria_func_list, properties_dict):
