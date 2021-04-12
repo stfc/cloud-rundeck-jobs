@@ -1,25 +1,55 @@
 import operator
 
 class ListItems:
+    criteria_func_dict = {
+        "name": lambda dict, args: dict["name"] in args,
+        "not_name": lambda dict, args: dict["name"] not in args,
+        "name_contains": lambda dict, args: any(arg in dict["name"] for arg in args),
+        "name_not_contains": lambda dict, args: any(arg not in dict["name"] for arg in args),
+
+        "id": lambda dict, args: dict["id"] in args,
+        "not_id": lambda dict, args: dict["id"] not in args,
+    }
+
     def __init__(self, conn, search_func, criteria_func_list, properties_dict):
+        """
+            search_func - function to get list of all items
+            criteria_list - list of functions to filter whole list of items (all return True/False)
+            properties_dict - dictionary of {property name:function to get property}
+        """
         self.conn = conn
         self.search_func = search_func
-        self.criteria_list = criteria_func_list
-        self.properties_dict = properties_dict
+        self.criteria_list = self.parseCriteria(criteria_func_list)
+        self.properties_dict = self.parseProperties(properties_dict)
+
+    def parseCriteria(self, criteria_list):
+        """ function to parse a list of criteria tuples (criteria name, args (dictionary)) """
+        res = []
+        for key, args in criteria_list:
+            func = lambda dict: self.getCriteriaFunc(key)(dict, args=args)
+            if func:
+                res.append(func)
+            else:
+                print("criteria name {} not found - ignoring".format(key))
+        if not res:
+            print("no criteria selected - getting all")
+            res = [lambda dict: True]
+        return res
+
+    def parseProperties(self, property_list):
+        """ function to parse a list of properties """
+        res = {key: self.getPropertyFunc(key) for key in property_list}
+        return res
 
     def listItems(self):
-        """
-            List items by running a list function, and find all items that match a set of criteria
-            list_func - function to get list of all items to search
-            criteria_func_list - list of functions to search whole list of items by
-        """
+        """ List items by running the list function, and filter by all items that match a set of criteria found in criteria_list """
         try:
             all_items = self.search_func()
         except Exception as e:
             print("error, could not get items")
             print(repr(e))
             return None
-        print("got all items")
+
         selected_items = []
         for item in all_items:
             res = True
@@ -28,7 +58,6 @@ class ListItems:
                     res = False
             if res:
                 selected_items.append(item)
-        print("got selected items")
         return selected_items
 
     def getProperties(self, all_items_list):
@@ -44,3 +73,9 @@ class ListItems:
                         output_dict[key] = "not found"
             res.append(output_dict)
         return res
+
+    def getCriteriaFunc(self, key):
+        return self.criteria_func_dict.get(key, None)
+
+    def getPropertyFunc(self, key):
+        return self.property_func_dict.get(key, None)
