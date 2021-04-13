@@ -1,5 +1,3 @@
-import datetime
-import re
 import argparse
 import csv
 from tabulate import tabulate
@@ -39,7 +37,6 @@ def OutputToFile(filepath, results_dict_list):
         print("none found - no file made")
 
 if __name__ == '__main__':
-
     # ARGPARSE BOILERPLATE CODE TO READ IN INPUTS
     parser = argparse.ArgumentParser(description='Get Information From Openstack')
 
@@ -49,7 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', "--where", nargs="+", action='append',
     help="selection policy", metavar=('policy', '*args'))
 
-    parser.add_argument("--sort-by", nargs=1)
+    parser.add_argument("--sort-by", nargs="+")
 
     parser.add_argument("--no-output", default=False, action="store_true")
     parser.add_argument("--save", default=False, action="store_true")
@@ -68,15 +65,16 @@ if __name__ == '__main__':
     }.get(args.search_by[0], None)
 
     if list_class:
+        list_obj = list_class(conn)
+
         # get all properties
         properties_list = []
         for property in args.select:
-            if property not in list_class.property_func_dict.keys():
+            if property not in list_obj.property_func_dict.keys():
                 print("property called {} does not exist, ignoring".format(property[0]))
             else:
                 properties_list.append(property)
         print("properties selected: {}".format(properties_list))
-
         if not properties_list:
             print("no properties valid - exiting")
             sys.exit(1)
@@ -85,27 +83,31 @@ if __name__ == '__main__':
         criteria_list = []
         if args.where:
             for criteria in args.where:
-                if criteria[0] not in list_class.criteria_func_dict.keys():
+                if criteria[0] not in list_obj.criteria_func_dict.keys():
                     print("criteria called {} does not exist, ignoring".format(criteria[0]))
                 else:
                     criteria_list.append((criteria[0], criteria[1:]))
         print("criteria selected: {}".format(criteria_list))
 
-        list_obj = list_class(conn, criteria_list=criteria_list, property_list=args.select)
-        selected_items = list_obj.listItems()
-        res = list_obj.getProperties(selected_items)
-
-        # get sort by property
+        # get sort_by criteria
+        sort_by_args = []
         if args.sort_by:
-            sort_by_args = []
             for arg in args.sort_by:
-                if arg not in list_class.property_func_dict.keys():
-                    print("sort by value {} does not exit - ignoring".format(arg))
+                if arg not in properties_list:
+                    print("cannot sort by value {} - ignoring".format(arg))
                 else:
                     sort_by_args.append(arg)
-            if sort_by_args:
-                res = sorted(res, key = lambda a: (a[i] for i in sort_by_args))
+            print("properties to sort by {}".format(sort_by_args))
+        else:
+            print("no properties selected to sort by")
 
+        # get results
+        selected_items = list_obj.listItems(criteria_list)
+        res = list_obj.getProperties(selected_items, properties_list)
+
+        # handle output
+        if sort_by_args:
+            res = sorted(res, key = lambda a: tuple(a[arg] for arg in sort_by_args))
         if not args.no_output:
             OutputToConsole(res)
         if args.save:
