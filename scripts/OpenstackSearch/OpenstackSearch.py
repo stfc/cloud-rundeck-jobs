@@ -4,6 +4,7 @@ from tabulate import tabulate
 import os.path
 import openstack
 import sys
+import datetime
 
 from ListHosts import ListHosts
 from ListIps import ListIps
