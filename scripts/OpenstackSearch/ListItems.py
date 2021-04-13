@@ -26,11 +26,7 @@ class ListItems:
         """ function to parse a list of criteria tuples (criteria name, args (dictionary)) """
         res = []
         for key, args in criteria_list:
-<<<<<<< HEAD
             func = lambda dict, key=key, args=args: self.getCriteriaFunc(key)(dict, args)
-=======
-            func = lambda dict: self.getCriteriaFunc(key)(dict, args=args)
->>>>>>> openstack-scripts-dev
             if func:
                 res.append(func)
             else:
