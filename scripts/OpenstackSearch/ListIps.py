@@ -1,39 +1,38 @@
 from ListItems import ListItems
 
 class ListIps(ListItems):
-    def __init__(self, conn, criteria_list, property_list):
-        super().__init__(conn, lambda: conn.list_floating_ips(),
-                        self.parseCriteria(criteria_list), self.parseProperties(property_list))
+    def __init__(self, conn):
+        super().__init__(conn, lambda: conn.list_floating_ips())
 
-    def parseCriteria(self, criteria_list):
-        """ function to parse a list of criteria tuples (criteria name, args (dictionary)) """
-        res = []
-        for key, args in criteria_list:
-            func = {
-                "status": lambda dict, args=args: dict["status"] in args,
-                "attached": lambda dict, args=args: dict["attached"] == True,
-                "id": lambda dict, args=args: dict["id"] in args,
+        self.criteria_func_dict = {
+            "status": lambda dict, args: dict["status"] in args,
+            "not_status": lambda dict, args: dict["status"] not in args,
 
-                "project-id": lambda dict, args=args: dict["project_id"] in args,
-                "project-name": lambda dict, args=args: self.conn.identity.find_project(dict["project_id"])["name"] in args
-            }.get(key, None)
-            if func:
-                res.append(func)
-        if not res:
-            res = [lambda dict: True]
-        return res
+            "attached": lambda dict, args: dict["attached"] == True,
+            "not_attached": lambda dict, args: dict["attached"] == False,
 
-    def parseProperties(self, property_list):
-        """ function to parse a list of properties """
+            "id": lambda dict, args: dict["id"] in args,
+            "not_id": lambda dict, args: dict["id"] not in args,
 
-        property_dict = {
+            "project_id": lambda dict, args: dict["project_id"] in args,
+            "not_project_id": lambda dict, args: dict["project_id"] not in args,
+
+            "older_than": lambda dict, args: self.isOlderThanXDays(dict, days = args),
+            "not_older_than": lambda dict, args: not self.isOlderThanXDays(dict, days = args),
+
+            "project_name": lambda dict, args: self.conn.identity.find_project(dict["project_id"])["name"] in args,
+            "not project_name": lambda dict, args: self.conn.identity.find_project(dict["project_id"])["name"] not in args,
+            "project_name_contains": lambda dict, args: any(arg in self.conn.identity.find_project(dict["project_id"])["name"] for arg in args),
+            "project_name_not_contains": lambda dict, args: any(arg not in self.conn.identity.find_project(dict["project_id"])["name"] for arg in args)
+        }
+
+        self.property_func_dict = {
             "ip_id": lambda a :    a["id"],
             "ip_fixed_address": lambda a:   a["fixed_ip_address"],
             "ip_floating_address": lambda a:  a["floating_ip_address"],
             "ip_port_id": lambda a: a["port_id"],
+            "ip_created_at": lambda:  a["created_at"],
 
             "project_id": lambda a :    a["project_id"],
             "project_name": lambda a:   self.conn.identity.find_project(a["project_id"])["name"]
         }
-        res = {key:property_dict.get(key, None) for key in property_list}
-        return res

@@ -1,52 +1,16 @@
-import datetime
-import re
 import argparse
 import csv
 from tabulate import tabulate
 import os.path
 import openstack
+import sys
+import datetime
 
 from ListHosts import ListHosts
 from ListIps import ListIps
 from ListServers import ListServers
 from ListProjects import ListProjects
 from ListUsers import ListUsers
-
-
-
-def isOlderThanXDays(server, days):
-    return isServerOlderThanOffset(datetime.timedelta(days=int(days)).total_seconds(), server)
-
-def isServerOlderThanOffset(time_offset_in_seconds, server):
-    offset_timestamp = (datetime.datetime.now()).timestamp() - time_offset_in_seconds
-    server_datetime = datetime.datetime.strptime(server["created_at"], '%Y-%m-%dT%H:%M:%SZ').timestamp()
-    return offset_timestamp > server_datetime
-
-def hasIllegalConnections(server):
-    address_dict = server["addresses"]
-    address_ips = []
-    for key in address_dict.keys():
-         for address in address_dict[key]:
-            address_ips.append(address["addr"])
-    return not areConnectionsLegal(address_ips)
-
-def areConnectionsLegal(address_ips):
-    if len(address_ips) == 1:
-        return True
-    # if list contains ip beginning with 172.16 - all must contain 172.16
-    # else allowed
-    # turn a flag on when ip other than 172.16 detected.
-    # if then detected, flag as illegal
-
-    i_flag = False
-    for address in address_ips:
-        if re.search("^172.16", address):
-            if i_flag:
-                return False
-        else:
-            if not i_flag:
-                i_flag = True
-    return True
 
 def OutputToConsole(results_dict_list):
     """ function to output a list of dictionaries to console """
@@ -74,104 +38,77 @@ def OutputToFile(filepath, results_dict_list):
         print("none found - no file made")
 
 if __name__ == '__main__':
+    # ARGPARSE BOILERPLATE CODE TO READ IN INPUTS
     parser = argparse.ArgumentParser(description='Get Information From Openstack')
+
+    parser.add_argument("search_by", help="Search For Specific Resource Type",
+    nargs=1, choices =["project", "host", "ip", "user", "server"])
+    parser.add_argument('-s', "--select", nargs="+", help="properties to get")
+    parser.add_argument('-w', "--where", nargs="+", action='append',
+    help="selection policy", metavar=('policy', '*args'))
+
+    parser.add_argument("--sort-by", nargs="+")
 
     parser.add_argument("--no-output", default=False, action="store_true")
     parser.add_argument("--save", default=False, action="store_true")
     parser.add_argument("--save-in", type=str, default="./Logs/")
 
-    search_by_subparser = parser.add_subparsers(dest='search_by_subparser',
-    description="Choose What to Search For:")
-
-    user_parser = search_by_subparser.add_parser("user", help="Search By Users")
-    user_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
-    choices=[
-        "user_id","user_name","user_email"
-    ])
-    user_parser.add_argument('-w', "--where", nargs="+", action='append',
-    help="selection policy", metavar=('policy', '*args'))
-    user_parser.add_argument("--sort-by", nargs="?", choices=[
-        "user_id","user_name","user_email"
-    ])
-
-    server_parser = search_by_subparser.add_parser("server", help="Search By Servers")
-    server_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
-    choices=[
-        "user_id","user_name","user_email", "host_id", "host_name", "server_id",
-        "server_name", "server_status","server_creation_date", "project_id",
-        "project_name"
-    ])
-    server_parser.add_argument('-w', "--where", nargs="+", action='append',
-    help="selection policy", metavar=('policy', '*args'))
-    server_parser.add_argument("--sort-by", nargs="?", choices=[
-        "user_id","user_name","user_email", "host_id", "host_name", "server_id",
-        "server_name", "server_status","server_creation_date", "project_id",
-        "project_name"
-    ])
-
-    project_parser = search_by_subparser.add_parser("project", help="Search By Project")
-    project_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
-    choices=[
-        "project_id", "project_name", "project_description"
-    ])
-    project_parser.add_argument('-w', "--where", nargs="+", action='append',
-    help="selection policy", metavar=('policy', '*args'))
-    project_parser.add_argument("--sort-by", nargs="?", choices=[
-        "project_id", "project_name", "project_description"
-    ])
-
-    ip_parser = search_by_subparser.add_parser("ip", help="Search By Ips")
-    ip_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
-    choices=[
-        "ip_id","ip_fixed_address","ip_floating_address","ip_port_id",
-        "project_id","project_name"
-    ])
-    ip_parser.add_argument('-w', "--where", nargs="+", action='append',
-    help="selection policy", metavar=('policy', '*args'))
-    ip_parser.add_argument("--sort-by", nargs="?", choices=[
-        "ip_id","ip_fixed_address","ip_floating_address","ip_port_id",
-        "project_id","project_name"
-    ])
-
-    host_parser = search_by_subparser.add_parser("host", help="Search By Host")
-    host_parser.add_argument('-s', "--select", nargs="+", help="properties to get",
-    choices=[
-        "host_id","host_name","project_id","project_name"
-    ])
-    host_parser.add_argument('-w', "--where", nargs="+", action='append',
-    help="selection policy", metavar=('policy', '*args'))
-    host_parser.add_argument("--sort-by", nargs="?",
-    choices=[
-        "host_id","host_name","project_id","project_name"
-    ])
-
-
-
     args = parser.parse_args()
     conn = openstack.connect(cloud_name="openstack", region_name="RegionOne")
 
+    # get what to search by
     list_class = {
         "user": ListUsers,
         "server": ListServers,
         "project": ListProjects,
         "ip": ListIps,
         "host": ListHosts
-    }.get(args.search_by_subparser, None)
-
-    criteria_list = []
-    if args.where:
-        for criteria in args.where:
-            criteria_list.append((criteria[0], criteria[1:]))
-    print(criteria_list)
+    }.get(args.search_by[0], None)
 
     if list_class:
-        list_obj = list_class(conn, criteria_list=criteria_list, property_list=args.select)
-        selected_items = list_obj.listItems()
-        res = list_obj.getProperties(selected_items)
+        list_obj = list_class(conn)
 
+        # get all properties
+        properties_list = []
+        for property in args.select:
+            if property not in list_obj.property_func_dict.keys():
+                print("property called {} does not exist, ignoring".format(property[0]))
+            else:
+                properties_list.append(property)
+        print("properties selected: {}".format(properties_list))
+        if not properties_list:
+            print("no properties valid - exiting")
+            sys.exit(1)
+
+        # get all criteria
+        criteria_list = []
+        if args.where:
+            for criteria in args.where:
+                if criteria[0] not in list_obj.criteria_func_dict.keys():
+                    print("criteria called {} does not exist, ignoring".format(criteria[0]))
+                else:
+                    criteria_list.append((criteria[0], criteria[1:]))
+        print("criteria selected: {}".format(criteria_list))
+
+        # get sort_by criteria
+        sort_by_args = []
         if args.sort_by:
-            res = sorted(res, key = lambda a: a[args.sort_by])
+            for arg in args.sort_by:
+                if arg not in properties_list:
+                    print("cannot sort by value {} - ignoring".format(arg))
+                else:
+                    sort_by_args.append(arg)
+            print("properties to sort by {}".format(sort_by_args))
+        else:
+            print("no properties selected to sort by")
 
+        # get results
+        selected_items = list_obj.listItems(criteria_list)
+        res = list_obj.getProperties(selected_items, properties_list)
+
+        # handle output
+        if sort_by_args:
+            res = sorted(res, key = lambda a: tuple(a[arg] for arg in sort_by_args))
         if not args.no_output:
             OutputToConsole(res)
         if args.save:
