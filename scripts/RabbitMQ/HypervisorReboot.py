@@ -10,8 +10,6 @@ DAYS_REQUIRED_BEFORE_CHECK = 60
 
 def CreateRebootMessage():
     """function to send reboot message to the rabbitmq queue"""
-
-
     message_json = json.dumps(message_body)
     return message_json
 

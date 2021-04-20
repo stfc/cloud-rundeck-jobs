@@ -32,7 +32,7 @@ class MessageCreator:
                     pkgs = f.readlines()
                 pkgs = [x.strip() for x in pkgs]
 
-            return self.createMessage("REQUEST_REBOOT",
+            return self.createMessage("REBOOT_HOST",
             {
                 "host_name": host_name,
                 "packages": pkgs
@@ -126,8 +126,12 @@ class MessageCreator:
                 "PAUSE" :   self.createMessage("PAUSE_SERVER", message_dict),
                 "UNPAUSE" : self.createMessage("UNPAUSE_SERVER", message_dict),
                 "SUSPEND" : self.createMessage("SUSPEND_SERVER", message_dict),
-                "REBOOT" : self.createMessage("REBOOT_SERVER", message_dict),
-                "DELETE" : self.createMessage("DELETE_SERVER", message_dict)
+                "RESUME": self.createMessage("RESUME_SERVER", message_dict),
+                "REBOOT_SOFT" : self.createMessage("REBOOT_SERVER_SOFT", message_dict),
+                "REBOOT_HARD": self.createMessage("REBOOT_SERVER_HARD", message_dict),
+                "DELETE" : self.createMessage("DELETE_SERVER", message_dict),
+                "LOCK": self.createMessage("LOCK_SERVER", message_dict),
+                "UNLOCK_SERVER": self.createMessage("UNLOCK_SERVER", message_dict)
             }.get(new_status.upper(), None)
 
         print("server does not exist")
