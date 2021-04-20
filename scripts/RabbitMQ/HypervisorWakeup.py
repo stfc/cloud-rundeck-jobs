@@ -54,6 +54,8 @@ if __name__ == "__main__":
     enable_service_message = message_creator.enableServiceMessage(name, service_name="nova-compute")
     remove_downtime_message = message_creator.removeDowntimeMessage(name)
 
+    #remove reboot required file
+
     if enable_service_message and remove_downtime_message:
         print(" [*] Enabling Host")
         channel.basic_publish(exchange="", routing_key=QUEUE, body=json.dumps(enable_service_message),

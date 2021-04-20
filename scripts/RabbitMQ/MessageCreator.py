@@ -1,4 +1,4 @@
-
+import os
 import datetime, openstack
 
 class MessageCreator:
@@ -7,18 +7,18 @@ class MessageCreator:
         self.conn = conn
         self.message = None
 
-    def createMessage(self, type, message_dict):
+    def createMessage(self, message_type, message_dict):
         """create a message dict"""
         return {
-                    "metadata": self.createMetadata(type),
+                    "metadata": self.createMetadata(message_type),
                     "message": message_dict
                 }
 
-    def createMetadata(self, type):
-        """create a message metadata - given a message type"""
+    def createMetadata(self, message_type):
+        """create a message metadata - given a message message_type"""
         return  {
                      "timestamp": datetime.datetime.now().timestamp(),
-                     "type": type
+                     "message_type": message_type
                 }
 
     def createRebootMessage(self, host_name, package_filepath):
@@ -42,15 +42,12 @@ class MessageCreator:
     def scheduleDowntimeMessage(self, host_name, duration=300, time_offset_seconds=60, author="test", comment="testing Icinga API calls", is_flexible=False):
         """ create message to shedule downtime """
         host = self.conn.compute.find_hypervisor(host_name)
-
-        #TODO:: check if start time and endtime are valid
-
         start_time = (datetime.datetime.now() + datetime.timedelta(seconds=time_offset_seconds)).timestamp()
         end_time = (start_time + duration)
         if host:
             return self.createMessage("SCHEDULE_DOWNTIME",
                 {
-                    "host_name": hypervisor["name"],
+                    "host_name": host_name,
                     "start_time": start_time,
                     "end_time": end_time,
                     "author": author,
@@ -97,31 +94,28 @@ class MessageCreator:
         print("service and/or host not found")
         return
 
-    def createVMMessage(self, server_name, image_name, flavor_name, network_name="", zone_name="", host_name=""):
+    def createVMMessage(self, server_name, image_name, flavor_name, network_name=None, zone_name=None, host_name=None):
         """ create message to create a VM/server """
-        if not self.conn.compute.find_image(image_name):
-            print("image {} does not exist".format(image_name))
-            return
-        if not self.conn.compute.find_flavor(flavor_name):
-            print("flavor {} does not exist".format(flavor_name))
-            return
-        if network_name and not self.conn.network.find_network(network_name):
-            print("network {} does not exist".format(network_name))
-            return
-        if host_name and not self.conn.compute.find_hypervisor(host_name):
-            print("host {} does not exist".format(host_name))
-            return
-        if zone_name and not self.conn.compute.get_zone(zone_name):
-            print("zone {} does not exist".format(zone_name))
-            return
-        return self.createMessage("CREATE_VM",  {
-            "name": server_name,
-            "image_id": image["id"],
-            "flavor_id": flavor["id"],
-            "network_id": (network["id"] if network else None),
-            "host_name": (host_name if host else None),
-            "zone_name": (zone_name if zone else None)
-        })
+        image = self.conn.compute.find_image(image_name)
+        flavor = self.conn.compute.find_flavor(flavor_name)
+        network = None
+
+        if network_name:
+            network = self.conn.network.find_network(network_name)
+        if host_name:
+            host = self.conn.compute.find_hypervisor(host_name)
+        if zone_name:
+            zone = self.conn.compute.get_zone(zone_name)
+
+        if server_name and image and flavor:
+            return self.createMessage("CREATE_VM",  {
+                "name": server_name,
+                "image_id": image["id"],
+                "flavor_id": flavor["id"],
+                "network_id": (network["id"] if network else None),
+                "host_name": (host_name if host else None),
+                "zone_name": (zone_name if zone else None)
+            })
 
     def serverStatusMessage(self, server_name, new_status):
         """ create a message that manipulates a specified server """

@@ -1,11 +1,8 @@
+import json, datetime, sys
 from configparser import ConfigParser
-import os.path
-import json, pika, datetime, sys
+import pika
 import openstack
 import requests
-import datetime
-import time
-import syslog
 
 CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
 
@@ -106,7 +103,7 @@ class MessageReceiver:
         r = requests.get(url, auth=(ICINGA_API_USERNAME, ICINGA_API_PASSWORD), verify=False,
          params = {"filter":"host.name==\"{}\"".format(host)})
 
-        if r.status_code == requests.codes.ok and len(r.json()["results"]) > 0:
+        if r.status_code == requests.codes["ok"] and len(r.json()["results"]) > 0:
             return r.json()
         else:
             return None
@@ -148,7 +145,7 @@ class MessageReceiver:
                                   "fixed": False if is_flexible else True
                               })
                              )
-            if r.status_code == requests.codes.ok:
+            if r.status_code == requests.codes["ok"]:
                 print("downtime of host {0} scheduled for {1} until {2} (Fixed: {3}, Duration: {4})".format(
                         host,
                         datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d, %H:%M:%S'),
@@ -180,7 +177,7 @@ class MessageReceiver:
                                   "filter":"host.name==\"{}\"".format(host)
                               })
                              )
-            if r.status_code == requests.codes.ok:
+            if r.status_code == requests.codes["ok"]:
                 print("downtime of host removed")
             else:
                 print("downtime could not be removed")
@@ -239,7 +236,7 @@ class MessageReceiver:
             print(repr(e))
             return
 
-        if image and flavor and not self.conn.compute.find_server(name):
+        if self.conn.compute.find_image(image_id) and self.conn.compute.find_flavor(flavor_id) and not self.conn.compute.find_server(name):
             availability_zone = None
             if host and zone:
                 availability_zone = "{}:{}".format(host, zone)
