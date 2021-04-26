@@ -1,82 +1,109 @@
+import sys
+from configparser import ConfigParser
+import openstack
+from MessageReceiver import MessageReceiver
+CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
 
 class ServerMessageReceiver(MessageReceiver):
-    """ class to handle receiving and validating a message dealing with VMs from a rabbitmq queue """
-    def __init__(self, conn):
-        super().__init__(conn)
+    """ class to handle receiving and validating a message dealing with VMs
+    from a rabbitmq queue """
+    def getHelperFunc(self, func_type):
+        return {
+            "CREATE_SERVER": self.createServerCallback,
 
-    def onMessageReceived(self, ch, method, properties, body):
-        """callback function when a message is read from the queue"""
-        body = json.loads(body.decode())
-        print(" [X] Recieved {}".format(body))
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        try:
-            func_type = body["metadata"]["type"]
-        except KeyError as e:
-            #syslog(LOG_ERR, "Could Not Read Message")
-            #syslog(LOG_ERR, repr(e))
-            print("Could Not Read Message")
-            print(repr(e))
-            return
-
-        # a dictionary to handle receiving a specific message type
-        helper_func = {
             "SHUTDOWN_SERVER":  lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.stop_server),
+            self.statusCallback(ch, method, properties, body,
+            self.conn.compute.stop_server, "SHUTOFF"),
 
             "PAUSE_SERVER":     lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.pause_server),
-
-            "UNPAUSE_SERVER":   lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.unpause_server),
+            self.statusCallback(ch, method, properties, body,
+            self.conn.compute.pause_server, "PAUSED"),
 
             "SUSPEND_SERVER":   lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.suspend_server),
+            self.statusCallback(ch, method, properties, body,
+            self.conn.compute.suspend_server, "SUSPENDED"),
 
             "RESUME_SERVER":  lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.resume_server),
+            self.statusCallback(ch, method, properties, body,
+            self.conn.compute.resume_server, "ACTIVE"),
 
             "REBOOT_SERVER_SOFT":    lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, lambda a: conn.compute.reboot_server(a, "SOFT")),
+            self.statusCallback(ch, method, properties, body,
+            lambda a: self.conn.compute.reboot_server(a, "SOFT"), "ACTIVE"),
 
             "REBOOT_SERVER_HARD":    lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, lambda a: conn.compute.reboot_server(a, "HARD")),
+            self.statusCallback(ch, method, properties, body,
+            lambda a: self.conn.compute.reboot_server(a, "HARD"), "ACTIVE"),
 
-            "DELETE_SERVER":    lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.delete_server),
+            "DELETE_SERVER_HARD": lambda ch, method, properties, body:
+            self.deleteServerCallback(ch, method, properties, body, hard_delete=True),
 
-            "LOCK_SERVER":  lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.lock_server),
+            "DELETE_SERVER_SOFT": self.deleteServerCallback
 
-            "UNLOCK_SERVER":  lambda ch, method, properties, body:
-            self.statusCallback(ch, method, properties, body, conn.compute.lock_server),
         }.get(func_type, None)
 
-        if helper_func:
-            helper_func(ch, method, properties, body)
-        else:
-            #syslog(LOG_ERR, ""Could Not Read Message"")
-            print("Could Not Read Message - unkown message type")
-
-    def statusCallback(self, ch, method, properties, body, service_func):
+    def statusCallback(self, ch, method, properties, body, service_func, new_status):
         """Function to handle server status changes"""
         try:
-            server_name = body["message"]["name"]
+            server_id = body["message"]["id"]
         except KeyError as e:
-            print("error could not read message")
-            print(repr(e))
-            return
-        server = self.conn.find_server(server_name)
-        success = False
-        if server:
-            service_func(server)
-            print("server callback handled")
-            #wait to confirm handling?
+            return (False, "Malformed Message: {0}".format(repr(e)))
 
+        print("validating server")
+        try:
+            server = [server for server in self.conn.list_servers(all_projects=True) if server["id"] == server_id][0]
+        except Exception as e:
+            return (False, "Server with ID {0} Not Found".format(server_id))
+        print("finished validating server")
+
+        try:
+            host = self.conn.compute.find_hypervisor(server["hypervisor_hostname"])
+        except Exception as e:
+            print("Error finding host")
+            host = None
+
+        if not host:
+            return (False, "Could not find Server's Host Hypervisor {0}".format(server["hypervisor_hostname"]))
+        if host["status"] == "disabled":
+            return (False, "Host Hypervisor {0} is disabled")
+
+        try:
+            print("performing action")
+            service_func(server)
+
+            print("waiting for server")
+            if not new_status == "SHUTOFF":
+                self.conn.compute.wait_for_server(server, new_status)
+
+            return (True, "Status Change Successful")
+
+        except Exception as e:
+            return (False, "Server Status Change Failed: {0}".format(repr(e)))
+
+
+    def deleteServerCallback(self, ch, method, properties, body, hard_delete=False):
+        """function to handle deleting a server"""
+        try:
+            server_id = body["message"]["id"]
+        except KeyError as e:
+            return (False, "Malformed Message: {0}".format(repr(e)))
+
+        print("validating server")
+        try:
+            server = [server for server in self.conn.list_servers(all_projects=True) if server["id"] == server_id][0]
+        except Exception as e:
+            return (False, "Server with ID {0} Not Found".format(server_id))
+        print("finished validating server")
+
+        if hard_delete or server["status"] == "SHUTOFF":
+            self.conn.compute.delete_server(server)
+            return (True, "Server Deleted")
         else:
-            print("error server not found")
+            return (False, "SOFT DELETE ERROR - Server Not Shutoff")
+
 
     def createServerCallback(self, ch, method, properties, body):
-        """Function to create server"""
+        """Function to handle creating a server"""
         try:
             name = body["message"]["name"]
             image_id = body["message"]["image_id"]
@@ -85,17 +112,23 @@ class ServerMessageReceiver(MessageReceiver):
             host =  body["message"]["host_name"]
             zone = body["message"]["zone_name"]
         except KeyError as e:
-            print("error could not read message")
-            print(repr(e))
-            return
+            return (False, "Malformed Message: {0}".format(repr(e)))
 
-        if self.conn.compute.find_image(image_id) and self.conn.compute.find_flavor(flavor_id) and not self.conn.compute.find_server(name):
-            availability_zone = None
-            if host and zone:
-                availability_zone = "{}:{}".format(host, zone)
-            conn.compute.create_server(name, image_id, flavor_id, network_id, availability_zone)
-        print("error image, flavor or server not found")
-        return
+        if self.conn.compute.find_image(image_id):
+            return (False, "Image Not Found")
+
+        if self.conn.compute.find_flavor(flavor_id):
+            return (False, "Flavor Not Found")
+
+        availability_zone = None
+        if host and zone:
+            availability_zone = "{}:{}".format(host, zone)
+        try:
+            self.conn.compute.create_server(name, image_id, flavor_id, network_id, availability_zone)
+            return (True, "Server Creation Successful")
+        except Exception as e:
+            print(repr(e))
+            return (False, "Openstack Error: {0}".format(repr(e)))
 
 if __name__ == "__main__":
     try:
@@ -105,22 +138,15 @@ if __name__ == "__main__":
         RABBIT_PORT = configparser.get("global", "RABBIT_PORT")
         RABBIT_HOST = configparser.get("global", "RABBIT_HOST")
         QUEUE = configparser.get("global", "QUEUE")
-
-        ICINGA_API_USERNAME = configparser.get("icinga", "ICINGA_API_USERNAME")
-        ICINGA_API_PASSWORD = configparser.get("icinga", "ICINGA_API_PASSWORD")
-        ICINGA_URL = configparser.get("icinga", "ICINGA_URL")
-
-        ICINGA_HOSTS_ENDPOINT = configparser.get("icinga", "ICINGA_HOSTS_ENDPOINT")
-        ICINGA_DOWNTIMES_ENDPOINT = configparser.get("icinga", "ICINGA_DOWNTIMES_ENDPOINT")
-        ICINGA_SCHEDULE_DOWNTIMES_ENDPOINT = configparser.get("icinga", "ICINGA_SCHEDULE_DOWNTIMES_ENDPOINT")
-        ICINGA_REMOVE_DOWNTIMES_ENDPOINT = configparser.get("icinga", "ICINGA_REMOVE_DOWNTIMES_ENDPOINT")
+        EXCHANGE_TYPE = configparser.get("global", "EXCHANGE_TYPE")
 
         CLOUD_NAME = configparser.get("openstack", "CLOUD_NAME")
         REGION = configparser.get("openstack", "REGION")
+
+        ROUTING_KEY = configparser.get("servermessageconfig", "ROUTING_KEY")
     except Exception as e:
-        #syslog(LOG_ERR, "Unable to read config file")
-        #syslog(LOG_ERR, repr(e))
         print("error - unable to read config file")
+        print(repr(e))
         sys.exit(1)
 
     try:
@@ -131,7 +157,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        receiver = ServiceMessageReceiver(conn)
-        receiver.mainLoop()
+        receiver = ServerMessageReceiver(conn, RABBIT_HOST, RABBIT_PORT, QUEUE, EXCHANGE_TYPE, ROUTING_KEY)
     except KeyboardInterrupt:
         print("Interrupted")
