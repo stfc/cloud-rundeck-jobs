@@ -1,0 +1,13 @@
+Metadata-Version: 1.0
+Name: query-openstack
+Version: 0.0.1
+Summary: query and list openstack compute services
+Home-page: UNKNOWN
+Author: Anish Mudaraddi
+Author-email: <anish.mudaraddi@stfc.ac.uk>
+License: UNKNOWN
+Description: Query and list openstack compute services
+        - for users, servers, ips, hypervisors and projects
+        based on a set of predefined criteria
+Keywords: python,openstack
+Platform: UNKNOWN

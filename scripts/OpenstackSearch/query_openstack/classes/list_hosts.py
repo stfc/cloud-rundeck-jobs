@@ -1,7 +1,24 @@
-from ListItems import ListItems
+from .list_items import ListItems
 
 class ListHosts(ListItems):
+    """
+    A class to list hosts (hypervisors): Inherits from ListItems
+
+    Attributes
+    ----------
+    criteria_func_dict: dict
+        stores possible query criteria options -
+        criteria name (key) : function to evaluate a criteria on host (value)
+                function (bool) - evaluate 'host' properties against criteria
+                updates ListItems criteria_func_dict
+
+    property_func_dict: dict
+        stores possible host property options
+        property name (key) : function to retrieve property (value)
+                function (string/int) - returns property value from a 'host' dictionary
+    """
     def __init__(self, conn):
+        ''' constructor class '''
         super().__init__(conn, lambda: conn.list_hypervisors())
 
         self.criteria_func_dict.update({

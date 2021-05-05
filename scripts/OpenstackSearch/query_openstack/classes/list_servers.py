@@ -1,16 +1,43 @@
-from ListItems import ListItems
+from .list_items import ListItems
 import re
 
 class ListServers(ListItems):
+    """
+    A class to list servers (VMs): Inherits from ListItems
+
+    Attributes
+    ----------
+    criteria_func_dict: dict
+        stores possible query criteria options -
+        criteria name (key) : function to evaluate a criteria on server (value)
+                function (bool) - evaluate 'server' properties against criteria
+                overrides ListItems attribute
+
+    property_func_dict: dict
+        stores possible server property options
+        property name (key) : function to retrieve property (value)
+                function (string/int) - returns property value from a 'server' dictionary
+
+    Methods
+    --------
+    hasIllegalConnections(server):
+        Checks if the server has illegal IP connections
+        returns bool
+
+    areConnectionsLegal(address_ips):
+        Helper function to check illegal ip connections, given a list of ips
+        returns bool
+    """
     def __init__(self, conn):
-        super().__init__(conn, lambda: conn.list_servers(all_projects=True))
+        '''constructor class'''
+        super().__init__(conn, lambda: conn.list_servers(all_projects=True, filters={"limit":10000}))
 
         self.criteria_func_dict.update({
             "status": lambda dict, args: dict["status"] in args,
             "not_status": lambda dict, args: dict["status"] not in args,
 
-            "older_than": lambda dict, args: self.isOlderThanXDays(dict, days = args[0]),
-            "not_older_than": lambda dict, args: not self.isOlderThanXDays(dict, days = args[0]),
+            "older_than": lambda dict, args: self.isOlderThanXDays(dict["created_at"], days = args[0]),
+            "not_older_than": lambda dict, args: not self.isOlderThanXDays(dict["created_at"], days = args[0]),
 
             "has_illegal_connections": lambda dict, args: self.hasIllegalConnections(dict),
 
@@ -27,8 +54,6 @@ class ListServers(ListItems):
             "not_host_name": lambda dict, args: dict["hypervisor_hostname"] not in args,
             "host_name_contains": lambda dict, args: any(arg in dict["hypervisor_hostname"] for arg in args),
             "host_name_not_contains": lambda dict, args: any(arg not in dict["hypervisor_hostname"] for arg in args),
-
-
         })
 
         self.property_func_dict = {
@@ -48,9 +73,16 @@ class ListServers(ListItems):
             "project_name": lambda a:   a["location"]["project"]["name"]
         }
 
-
-
     def hasIllegalConnections(self, server):
+        '''
+            Function to check if a server has illegal connections
+                (if internal 172.16.. ips are mixed with other external ips e.g. 192.168.. & 130.246..)
+                Parameters:
+                    server ({dict}): a dictionary representing the properties
+                    of a server within openstack
+
+                Returns (bool): True if illegal connection, false if not
+        '''
         address_dict = server["addresses"]
         address_ips = []
         for key in address_dict.keys():
@@ -59,6 +91,12 @@ class ListServers(ListItems):
         return not self.areConnectionsLegal(address_ips)
 
     def areConnectionsLegal(self, address_ips):
+        '''
+            Helper function to check if any illegal connection exist in a list of ips
+                Parameters:
+                    address_ips ([string]): list of ips as strings
+                Returns (bool): True if no illegal connections else False
+        '''
         if len(address_ips) == 1:
             return True
 

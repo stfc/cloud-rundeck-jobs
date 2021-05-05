@@ -1,7 +1,24 @@
-from ListItems import ListItems
+from .list_items import ListItems
 
 class ListIps(ListItems):
+    """
+    A class to list float ips: Inherits from ListItems
+
+    Attributes
+    ----------
+    criteria_func_dict: dict
+        stores possible query criteria options -
+        criteria name (key) : function to evaluate a criteria on ip (value)
+                function (bool) - evaluate 'ip' properties against criteria
+                overrides ListItems attribute
+
+    property_func_dict: dict
+        stores possible ip property options
+        property name (key) : function to retrieve property (value)
+                function (string/int) - returns property value from a 'ip' dictionary
+    """
     def __init__(self, conn):
+        '''constructor class'''
         super().__init__(conn, lambda: conn.list_floating_ips())
 
         self.criteria_func_dict = {
