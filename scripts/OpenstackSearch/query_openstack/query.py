@@ -56,11 +56,13 @@ def Query(by, properties_list, criteria_list, sort_by_list, output_to_console=Fa
         return None
 
     # validate criteria_list
-    criteria_names, invalid = ValidateInputList([criteria[0] for criteria in criteria_list], list_obj.criteria_func_dict.keys())
-    if invalid:
-        print("Following properties are not valid: \n {}".format(invalid))
-    criteria_to_use = [(criteria[0], criteria[1:]) for criteria in criteria_list if criteria[0] in criteria_names]
-
+    if criteria_list:
+        criteria_names, invalid = ValidateInputList([criteria[0] for criteria in criteria_list], list_obj.criteria_func_dict.keys())
+        if invalid:
+            print("Following properties are not valid: \n {}".format(invalid))
+        criteria_to_use = [(criteria[0], criteria[1:]) for criteria in criteria_list if criteria[0] in criteria_names]
+    else:
+        criteria_to_use = []
     # validate sort_by_list
     sort_by_to_use, invalid = ValidateInputList(sort_by_list, list_obj.property_func_dict.keys())
     if invalid:
