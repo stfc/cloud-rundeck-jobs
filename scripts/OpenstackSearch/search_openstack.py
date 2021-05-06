@@ -1,5 +1,5 @@
 import argparse
-from query_openstack.query import Query
+from queryopenstack.query import Query
 
 if __name__ == '__main__':
     # ARGPARSE BOILERPLATE CODE TO READ IN INPUTS
@@ -26,4 +26,4 @@ if __name__ == '__main__':
           output_to_console=(not args.no_output),
           save=args.save,
           save_in=args.save_in
-         )
+          )
