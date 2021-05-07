@@ -15,7 +15,7 @@ Currently the package allows the user to query by the following Openstack resour
 # Installation
 Must have `Python3` and `pip` installed and updated (you may also need to install the latest version of the `cryptography` python module)
 
-To install the Python library, clone the repository and run:
+To install the Python package, clone the repository and run:
 
 `pip install /path/to/repo/scripts/OpenstackSearch/query_openstack`
 
@@ -36,7 +36,7 @@ provides an example of how to interface with the package.
 This script takes CLI arguments to run a query, for example:   
 
 `python search_openstack.py server
---select server_id server_name user_id user_name --where server_id 1 2 3 4 5
+--select server_id server_name user_id user_name --where id 1 2 3 4 5
 --where status ERROR --where has-illegal-connections
 --no-output --sort-by server_name --save --save-in "path/to/dir"`
 
