@@ -43,9 +43,9 @@ This script takes CLI arguments to run a query, for example:
 The CLI given are explained below:
 
   - `server` - (positional argument) refers to searching for VMs on the network - currently possible valid arguments are:
-    - `hosts` - search for Hypervisors
-    - `users` - search for Users
-    - `projects` - search for projects
+    - `host` - search for Hypervisors
+    - `user` - search for Users
+    - `project` - search for projects
     - `ip` - search for floating ips
 
 
