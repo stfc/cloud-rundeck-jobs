@@ -1,12 +1,13 @@
 from configparser import ConfigParser
 import json, pika, sys
 import argparse, openstack
+from pika.exchange_type import ExchangeType
 import sys
 
 sys.path.append('../')
 from MessageCreator import MessageCreator
 
-CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
+CONFIG_FILE_PATH = "../../HypervisorConfig.ini"
 
 if __name__ == "__main__":
 
@@ -25,7 +26,10 @@ if __name__ == "__main__":
 
         RABBIT_PORT = configparser.get("global", "RABBIT_PORT")
         RABBIT_HOST = configparser.get("global", "RABBIT_HOST")
+        EXCHANGE_TYPE = configparser.get("global", "EXCHANGE_TYPE")
         QUEUE = configparser.get("global", "QUEUE")
+
+        ROUTING_KEY = configparser.get("servermessageconfig", "ROUTING_KEY")
 
         CLOUD_NAME = configparser.get("openstack", "CLOUD_NAME")
         REGION = configparser.get("openstack", "REGION")
@@ -34,11 +38,19 @@ if __name__ == "__main__":
         print(repr(e))
         sys.exit(1)
     try:
+        #setup connection to rabbitmq queue
         connection_params = pika.ConnectionParameters(host=RABBIT_HOST,
         port=RABBIT_PORT, connection_attempts=10, retry_delay=2)
         connection = pika.BlockingConnection(connection_params)
         channel = connection.channel()
-        channel.queue_declare(queue=QUEUE, durable=True)
+        channel.exchange_declare(
+            exchange=EXCHANGE_TYPE,
+            exchange_type=ExchangeType.direct,
+            passive=False,
+            durable=True,
+            auto_delete=False
+        )
+        channel.queue_declare(queue=QUEUE, auto_delete=False)
 
     except (pika.exceptions.AMQPError, pika.exceptions.ChannelError) as e:
         print('Error connecting to RabbitMQ server')
@@ -67,7 +79,7 @@ if __name__ == "__main__":
 
         "schedule_downtime":lambda a: message_creator.scheduleDowntimeMessage(
                 a,
-                duration=300,
+                duration=60,
                 time_offset_seconds=60,
                 author="vgc59244",
                 comment="testing Icinga API calls",

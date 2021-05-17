@@ -1,8 +1,12 @@
-from configparser import ConfigParser
-from syslog import syslog, LOG_ERR, LOG_INFO
+import sys
 import os.path
-import json, datetime, pika, sys
-from MessageCreator import MessageCreator
+import json
+import datetime
+from configparser import ConfigParser
+import pika
+import openstack
+from pika.exchange_type import ExchangeType
+from utils.MessageCreator import MessageCreator
 CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
 
 
@@ -14,10 +18,13 @@ if __name__ == "__main__":
 
         RABBIT_PORT = configparser.get("global", "RABBIT_PORT")
         RABBIT_HOST = configparser.get("global", "RABBIT_HOST")
+        EXCHANGE_TYPE = configparser.get("global", "EXCHANGE_TYPE")
 
         HOSTNAME_PATH = configparser.get("local", "HOSTNAME_PATH")
 
         QUEUE = configparser.get("global", "QUEUE")
+
+        ROUTING_KEY = configparser.get("hostmessageconfig", "ROUTING_KEY")
 
         CLOUD_NAME = configparser.get("openstack", "CLOUD_NAME")
         REGION = configparser.get("openstack", "REGION")
@@ -33,7 +40,14 @@ if __name__ == "__main__":
         port=RABBIT_PORT, connection_attempts=10, retry_delay=2)
         connection = pika.BlockingConnection(connection_params)
         channel = connection.channel()
-        channel.queue_declare(queue=QUEUE, durable=True)
+        channel.exchange_declare(
+            exchange=EXCHANGE_TYPE,
+            exchange_type=ExchangeType.direct,
+            passive=False,
+            durable=True,
+            auto_delete=False
+        )
+        channel.queue_declare(queue=QUEUE, auto_delete=False)
 
     except (pika.exceptions.AMQPError, pika.exceptions.ChannelError) as e:
         syslog(LOG_ERR, 'Error connecting to RabbitMQ server:')
@@ -41,7 +55,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        #setup connection with openstack
         conn = openstack.connect(cloud=CLOUD_NAME, region_name=REGION)
         message_creator = MessageCreator(conn)
     except Exception as e:
@@ -50,7 +63,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     print(" [*] Waking up")
-    name = open(HOSTNAME_PATH).read().strip()
+    #name = open(HOSTNAME_PATH).read().strip()
+    """TEST SECTION"""
+    name = "hv41.nubes.rl.ac.uk"
+
     enable_service_message = message_creator.enableServiceMessage(name, service_name="nova-compute")
     remove_downtime_message = message_creator.removeDowntimeMessage(name)
 
@@ -58,8 +74,8 @@ if __name__ == "__main__":
 
     if enable_service_message and remove_downtime_message:
         print(" [*] Enabling Host")
-        channel.basic_publish(exchange="", routing_key=QUEUE, body=json.dumps(enable_service_message),
+        channel.basic_publish(exchange=EXCHANGE_TYPE, routing_key=ROUTING_KEY, body=json.dumps(enable_service_message),
         properties=pika.BasicProperties(delivery_mode=2))
         print(" [*] Removing Downtime")
-        channel.basic_publish(exchange="", routing_key=QUEUE, body=json.dumps(remove_downtime_message),
+        channel.basic_publish(exchange=EXCHANGE_TYPE, routing_key=ROUTING_KEY, body=json.dumps(remove_downtime_message),
         properties=pika.BasicProperties(delivery_mode=2))
