@@ -5,7 +5,8 @@ import datetime
 from configparser import ConfigParser
 import psutil
 import pika
-from MessageCreator import MessageCreator
+import openstack
+from utils.MessageCreator import MessageCreator
 from pika.exchange_type import ExchangeType
 
 CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
@@ -13,7 +14,17 @@ REBOOT_FLAG = 0
 DAYS_REQUIRED_BEFORE_CHECK = 10
 
 def OnRebootReply(ch, method, properties, body):
-    """callback function on receiving a reply from worker"""
+    """
+    Callback Function to handle receiving a reply from worker - sets global
+    flag REBOOT_FLAG
+        Parameters:
+            ch : rabbitmq channel information
+            method : rabbitmq delivery method information
+            properties: rabbitmq message properties
+            body: message payload
+        Returns:
+            None
+    """
     global REBOOT_FLAG
     body = json.loads(body.decode())
     print(" [X] Recieved {}".format(body))
@@ -27,6 +38,13 @@ def OnRebootReply(ch, method, properties, body):
     ch.close()
 
 def RebootCheckRequired(days_required):
+    """
+    Function to check if the host has been running for long enough
+    that a reboot is required
+        Parameters:
+            days_required(int): days running threshold for a reboot to take place
+        Returns: (bool) if a reboot is required or not
+    """
     last_reboot_date = datetime.datetime.fromtimestamp(psutil.boot_time())
     threshold_date = datetime.datetime.now() - datetime.timedelta(days=days_required)
     return last_reboot_date < threshold_date
@@ -78,7 +96,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        message_creator = MessageCreator(CLOUD_NAME, REGION, reply_required=True)
+        conn = openstack.connect(cloud=CLOUD_NAME, region_name=REGION)
+        message_creator = MessageCreator(conn, reply_required=True)
     except Exception as e:
         print("could not establish openstack connection")
         print(repr(e))

@@ -2,12 +2,44 @@ import sys
 from configparser import ConfigParser
 import openstack
 from MessageReceiver import MessageReceiver
-CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
+CONFIG_FILE_PATH = "../HypervisorConfig.ini"
 
 class ServerMessageReceiver(MessageReceiver):
-    """ class to handle receiving and validating a message dealing with VMs
-    from a rabbitmq queue """
+    """
+    class to handle receiving and validating a message dealing with VMs
+    from a rabbitmq queue. Inherits from MessageReceiver base class
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    --------
+    getHelperFunc(func_type):
+        Overrides MessageReceiver getHelperFunc - determines how to handle a
+        message, based on its message type. Calls appropriate helper function
+
+    statusCallback(ch, method, properties, body, service_func, new_status)
+        Helper function to handle server status change
+        returns (Bool, String) tuple after handling message
+
+    deleteServerCallback(ch, method, properties, body, hard_delete=False)
+        Helper function to handle server deletion
+        returns (Bool, String) tuple after handling message
+
+    createServerCallback(ch, method, properties, body)
+        Helper function to handle server creation
+        returns (Bool, String) tuple after handling message
+    """
     def getHelperFunc(self, func_type):
+        """
+        Function to get Callback Function For Corresponding Message Types
+            Parameters:
+                func_type (string) : unique message type identifier
+            Returns:
+                (lambda function()) which needs to be called to handle
+                that particular message
+        """
         return {
             "CREATE_SERVER": self.createServerCallback,
 
@@ -43,7 +75,18 @@ class ServerMessageReceiver(MessageReceiver):
         }.get(func_type, None)
 
     def statusCallback(self, ch, method, properties, body, service_func, new_status):
-        """Function to handle server status changes"""
+        """
+        Function called when message involves changing the state of a server
+            Parameters:
+                ch : rabbitmq channel information
+                method : rabbitmq delivery method information
+                properties: rabbitmq message properties
+                body: message payload
+                service_func: specific server status change message type
+                new_status: what the status will be after the change
+            Returns: (Bool, String): tuple after handling message - if handling
+            succeeded/failed (Bool) and return message/reason failed (String)
+        """
         try:
             server_id = body["message"]["id"]
         except KeyError as e:
@@ -51,7 +94,7 @@ class ServerMessageReceiver(MessageReceiver):
 
         print("validating server")
         try:
-            server = [server for server in self.conn.list_servers(all_projects=True) if server["id"] == server_id][0]
+            server = conn.compute.find_server(server_id)
         except Exception as e:
             return (False, "Server with ID {0} Not Found".format(server_id))
         print("finished validating server")
@@ -80,9 +123,18 @@ class ServerMessageReceiver(MessageReceiver):
         except Exception as e:
             return (False, "Server Status Change Failed: {0}".format(repr(e)))
 
-
     def deleteServerCallback(self, ch, method, properties, body, hard_delete=False):
-        """function to handle deleting a server"""
+        """
+        Function called when message has DELETE_SERVER message_type
+            Parameters:
+                ch : rabbitmq channel information
+                method : rabbitmq delivery method information
+                properties: rabbitmq message properties
+                body: message payload
+                hard_delete: True: only delete SHUTOFF servers. False: delete regardless of status
+            Returns: (Bool, String): tuple after handling message - if handling
+            succeeded/failed (Bool) and return message/reason failed (String)
+        """
         try:
             server_id = body["message"]["id"]
         except KeyError as e:
@@ -90,7 +142,7 @@ class ServerMessageReceiver(MessageReceiver):
 
         print("validating server")
         try:
-            server = [server for server in self.conn.list_servers(all_projects=True) if server["id"] == server_id][0]
+            server = server = conn.compute.find_server(server_id)
         except Exception as e:
             return (False, "Server with ID {0} Not Found".format(server_id))
         print("finished validating server")
@@ -101,9 +153,17 @@ class ServerMessageReceiver(MessageReceiver):
         else:
             return (False, "SOFT DELETE ERROR - Server Not Shutoff")
 
-
     def createServerCallback(self, ch, method, properties, body):
-        """Function to handle creating a server"""
+        """
+        Function called when message has CREATE_SERVER message_type
+            Parameters:
+                ch : rabbitmq channel information
+                method : rabbitmq delivery method information
+                properties: rabbitmq message properties
+                body: message payload
+            Returns: (Bool, String): tuple after handling message - if handling
+            succeeded/failed (Bool) and return message/reason failed (String)
+        """
         try:
             name = body["message"]["name"]
             image_id = body["message"]["image_id"]

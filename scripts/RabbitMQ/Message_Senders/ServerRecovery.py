@@ -4,7 +4,8 @@ import json
 from configparser import ConfigParser
 import pika
 from pika.exchange_type import ExchangeType
-from MessageCreator import MessageCreator
+import openstack
+from utils.MessageCreator import MessageCreator
 CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
 #RecoverVM.py [ServerList] [Reboot]/[Shutdown]/[Delete]
 
@@ -49,7 +50,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        message_creator = MessageCreator(CLOUD_NAME, REGION)
+        conn = openstack.connect(cloud=CLOUD_NAME, region_name=REGION)
+        message_creator = MessageCreator(conn)
     except Exception as e:
         print("could not establish openstack connection")
         print(repr(e))
@@ -63,10 +65,7 @@ if __name__ == "__main__":
         elif args.recovery_type == "delete":
             message_type = "DELETE_"+(args.type).upper()
 
-        if args.using_ids:
-            message = message_creator.serverStatusMessageFromID(item, message_type)
-        else:
-            message = message_creator.serverStatusMessageFromName(item, message_type)
+        message = message_creator.createServerStatusMessage(message_type, ("id" if args.using_ids else "name"), item)
 
         if message:
             try:
@@ -90,7 +89,7 @@ if __name__ == "__main__":
                 sys.exit(1)
 
             print(" [*] Running {0} on server with {1} : {2}".format(message_type, "ID" if args.using_ids else "Name", item))
-
+            print(message)
             channel.basic_publish(exchange=EXCHANGE_TYPE, routing_key=ROUTING_KEY,
             body=json.dumps(message),
             properties=pika.BasicProperties(delivery_mode=2))

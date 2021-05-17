@@ -4,9 +4,10 @@ import json
 import datetime
 from configparser import ConfigParser
 import pika
+import openstack
 from pika.exchange_type import ExchangeType
-from MessageCreator import MessageCreator
-CONFIG_FILE_PATH = "etc/rabbitmq-utils/HypervisorConfig.ini"
+from utils.MessageCreator import MessageCreator
+CONFIG_FILE_PATH = "/etc/rabbitmq-utils/HypervisorConfig.ini"
 
 
 if __name__ == "__main__":
@@ -54,7 +55,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        message_creator = MessageCreator(CLOUD_NAME, REGION)
+        conn = openstack.connect(cloud=CLOUD_NAME, region_name=REGION)
+        message_creator = MessageCreator(conn)
     except Exception as e:
         print("could not establish openstack connection")
         print(repr(e))
