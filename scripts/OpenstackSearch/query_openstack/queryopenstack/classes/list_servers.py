@@ -30,7 +30,9 @@ class ListServers(ListItems):
     """
     def __init__(self, conn):
         '''constructor class'''
-        super().__init__(conn, lambda: conn.list_servers(all_projects=True, filters={"limit":10000}))
+        #Currently not working
+        #super().__init__(conn, lambda: conn.list_servers(all_projects=True, filters={"limit":10000}))
+        super().__init__(conn, self.getAllServers)
 
         self.criteria_func_dict.update({
             "status": lambda dict, args: dict["status"] in args,
@@ -39,7 +41,7 @@ class ListServers(ListItems):
             "older_than": lambda dict, args: self.isOlderThanXDays(dict["created_at"], days = args[0]),
             "not_older_than": lambda dict, args: not self.isOlderThanXDays(dict["created_at"], days = args[0]),
 
-            "has_illegal_connections": lambda dict, args: self.hasIllegalConnections(dict),
+            "has_illegal_connections": lambda dict, args: self.hasIllegalConnections(dict["addresses"]),
 
             "user_id": lambda dict, args: dict["user_id"] in args,
             "not_user_id": lambda dict, args: dict["user_id"] not in args,
@@ -57,23 +59,35 @@ class ListServers(ListItems):
         })
 
         self.property_func_dict = {
-            "user_id":lambda a :    a["user_id"],
-            "user_name":lambda a :  self.conn.identity.find_user(a["user_id"])["name"],
-            "user_email":lambda a : self.conn.identity.find_user(a["user_id"])["email"],
+            "user_id": lambda a: a["user_id"],
+            "user_name": lambda a: self.conn.identity.find_user(a["user_id"])["name"],
+            "user_email": lambda a: self.conn.identity.find_user(a["user_id"])["email"],
 
-            "host_id": lambda a :   a["host_id"],
-            "host_name":lambda a :  a["hypervisor_hostname"],
+            "host_id": lambda a: a["host_id"],
+            "host_name": lambda a: a["hypervisor_hostname"],
 
-            "server_id": lambda a : a["id"],
-            "server_name": lambda a :   a["name"],
-            "server_status": lambda a : a["status"],
-            "server_creation_date": lambda a : a["created_at"],
+            "server_id": lambda a: a["id"],
+            "server_name": lambda a: a["name"],
+            "server_status": lambda a: a["status"],
+            "server_creation_date": lambda a: a["created_at"],
 
-            "project_id": lambda a :    a["location"]["project"]["id"],
-            "project_name": lambda a:   a["location"]["project"]["name"]
+            "project_id": lambda a: a["location"]["project"]["id"],
+            "project_name": lambda a: a["location"]["project"]["name"]
         }
 
-    def hasIllegalConnections(self, server):
+    def getAllServers(self):
+        all_projects = self.conn.list_projects()
+        all_servers = []
+        for proj in all_projects:
+            try:
+                servers = self.conn.list_servers(filters={"all_tenants":True, "project_id":proj["id"], "limit":10000})
+                all_servers.extend(servers)
+            except Exception as e:
+                print(repr(e))
+                pass
+        return all_servers
+
+    def hasIllegalConnections(self, address_dict):
         '''
             Function to check if a server has illegal connections
                 (if internal 172.16.. ips are mixed with other external ips e.g. 192.168.. & 130.246..)
@@ -83,10 +97,10 @@ class ListServers(ListItems):
 
                 Returns (bool): True if illegal connection, false if not
         '''
-        address_dict = server["addresses"]
         address_ips = []
         for key in address_dict.keys():
              for address in address_dict[key]:
+                #address_ips.append(address)
                 address_ips.append(address["addr"])
         return not self.areConnectionsLegal(address_ips)
 

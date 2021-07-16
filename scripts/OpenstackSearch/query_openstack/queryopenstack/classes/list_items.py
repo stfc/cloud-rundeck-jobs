@@ -95,15 +95,17 @@ class ListItems:
                 that match all given criteria
         '''
         criteria_list = self.parseCriteria(criteria_list)
+        """
         try:
             all_items = self.search_func()
         except Exception as e:
             print("error, could not get items")
             print(repr(e))
             return None
-
+        """
+        all_items = self.search_func()
         selected_items = []
-        for item in all_items:
+        for i, item in enumerate(all_items):
             res = True
             for criteria in criteria_list:
                 if not criteria(item):

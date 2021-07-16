@@ -72,13 +72,15 @@ def Query(by, properties_list, criteria_list, sort_by_list, output_to_console=Fa
     criteria_to_use, properties_to_use, sort_by_to_use))
 
     # get results
-    res = list_obj.getProperties(list_obj.listItems(criteria_to_use), properties_to_use)
+    items = list_obj.listItems(criteria_to_use)
+    if items:
+        res = list_obj.getProperties(items, properties_to_use)
 
-    if sort_by_to_use:
-        res = sorted(res, key = lambda a: tuple(a[arg] for arg in sort_by_to_use))
-    if output_to_console:
-        OutputToConsole(res)
-    if save:
-        OutputToFile(save_in, res)
+        if sort_by_to_use:
+            res = sorted(res, key = lambda a: tuple(a[arg] for arg in sort_by_to_use))
+        if output_to_console:
+            OutputToConsole(res)
+        if save:
+            OutputToFile(save_in, res)
 
-    return res
+        return res
