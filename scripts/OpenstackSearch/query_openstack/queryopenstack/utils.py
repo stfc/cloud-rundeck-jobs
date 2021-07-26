@@ -58,28 +58,25 @@ def OutputToConsole(results_dict_list):
     else:
         print("none found")
 
-def OutputToFile(dir_path, results_dict_list):
+def OutputToFile(save_path, results_dict_list):
     '''
         Write results of query into a file
             - csv format:
                 - whitespace as delimeter
-                - saves as {TIMESTAMP}_search_output.txt where timestamp is the
-                time the file was written
+                - saves as file specified by save_path
 
             Parameters:
-                dir_path (string) - a path to directory in which to save file
+                save_path (string) - file path to save results
             Returns: None
     '''
     if results_dict_list:
-
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-
         keys = results_dict_list[0].keys()
-        timestamp = "{:%Y-%m-%d_%H:%M}".format(datetime.datetime.now())
-        with open(dir_path+"{}_search_output.txt".format(timestamp), "w", newline="\n") as output_file:
-            writer = csv.DictWriter(output_file, keys)
-            writer.writeheader()
-            writer.writerows(results_dict_list)
+        try:
+            with open(save_path, "w", newline="\n") as output_file:
+                writer = csv.DictWriter(output_file, keys)
+                writer.writeheader()
+                writer.writerows(results_dict_list)
+        except Exception as e:
+            print("could not create file {}".format(e))
     else:
         print("none found - no file made")

@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--no-output", default=False, action="store_true")
     parser.add_argument("--save", default=False, action="store_true")
-    parser.add_argument("--save-in", type=str, default="./Logs/")
+    parser.add_argument("--save-path", type=str, default="./Logs/")
 
     args = parser.parse_args()
 
@@ -25,5 +25,5 @@ if __name__ == '__main__':
           sort_by_list=args.sort_by if args.sort_by else None,
           output_to_console=(not args.no_output),
           save=args.save,
-          save_in=args.save_in
+          save_path=args.save_path
           )

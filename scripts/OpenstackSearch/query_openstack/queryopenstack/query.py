@@ -6,7 +6,7 @@ from .classes.list_users import ListUsers
 from .utils import CreateOpenstackConnection, OutputToConsole, OutputToFile, ValidateInputList
 
 
-def Query(by, properties_list, criteria_list, sort_by_list, output_to_console=False, save=False, save_in="~/Openstack_Logs/", openstack_conn=None):
+def Query(by, properties_list, criteria_list, sort_by_list, output_to_console=False, save=False, save_path="~/Openstack_Logs/output.csv", openstack_conn=None):
     '''
     Function to handle an openstack query
 
@@ -81,6 +81,6 @@ def Query(by, properties_list, criteria_list, sort_by_list, output_to_console=Fa
         if output_to_console:
             OutputToConsole(res)
         if save:
-            OutputToFile(save_in, res)
+            OutputToFile(save_path, res)
 
         return res
