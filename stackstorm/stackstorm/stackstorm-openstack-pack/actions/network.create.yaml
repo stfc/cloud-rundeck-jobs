@@ -1,0 +1,35 @@
+---
+description: Create Network
+enabled: true
+entry_point: src/network.py
+name: network.create
+parameters:
+    submodule:
+        default: network_create
+        immutable: True
+        type: string
+    project:
+        description: Project for New Network (Name or ID)
+        required: True
+        type: string
+    name:
+        description: New Network Name
+        required: True
+        type: string
+    description:
+        description: New Network Description
+        required: True
+        type: string
+    is_port_security_enabled:
+        description: Port security status
+        type: boolean
+        default: False
+    provider_network_type:
+        description: Type of physical network that maps to this network resource
+        type: string
+        default: vxlan
+    is_router_external:
+        description: Whether or not this is the default external network
+        type: boolean
+        default: False
+runner_type: python-script

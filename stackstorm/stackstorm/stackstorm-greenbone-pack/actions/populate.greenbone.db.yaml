@@ -1,0 +1,21 @@
+---
+description: Populates a Greenbone.db file with greenbone csv files provided
+enabled: true
+entry_point: src/Create_DB.py
+name: populate.greenbone.db
+parameters:
+    submodule:
+        default: populate_db
+        immutable: true
+        type: string
+    db_file_path:
+        description: File path to new Sqlite3 Greenbone DB
+        required: true
+        type: string
+        default: "~/greenbone/Greenbone.db"
+    csv_path_list:
+        description: An array of csv filepaths containing Greenbone vulnerability information
+        required: true
+        type: array
+runner_type: python-script
+

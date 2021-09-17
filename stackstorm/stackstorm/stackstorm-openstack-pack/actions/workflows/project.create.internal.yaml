@@ -1,0 +1,152 @@
+version: 1.0
+
+description: Create Internal Project Workflow
+
+input:
+  - project_name
+  - network_name
+  - project_description
+  - admin_user_list
+  - stfc_user_list
+  - default_network_internal_rules
+  - http_network_internal_rules
+  - https_network_internal_rules
+
+vars:
+  - stdout: null
+  - stderr: null
+
+output:
+  - stdout: <% ctx().stdout %>
+  - stderr: <% ctx().stderr %>
+
+tasks:
+  create_internal_project:
+    action: stackstorm_openstack.project.create
+      name=<% ctx().project_name %>
+      description=<% ctx().project_description %>
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - stdout: "<% result() %>"
+        do:
+          - create_rbac_policy
+          - create_security_group_default
+          - create_security_group_http
+          - create_security_group_https
+          - create_admin_roles
+          - create_stfc_roles
+      - when: <% failed() %>
+        publish: stderr="Failed creating project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_rbac_policy:
+    action: stackstorm_openstack.network.rbac.create
+      object_type="network"
+      action="access_as_shared"
+      rbac_object=<% ctx().network_name %>
+      target_project=<% ctx().project_name %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating RBAC rules for Project <% ctx().project_name %> On Network <% ctx().network_name %>, Error <% result() %>"
+        do: fail
+
+  create_security_group_default:
+    action: stackstorm_openstack.security.group.list project=<% ctx().project_name %>
+    next:
+      - when: <% succeeded() %>
+        do: create_security_group_rules_default
+      - when: <% failed() %>
+        publish: stderr="Failed creating default network for Project <% ctx().project_name %>"
+        do: fail
+
+  create_security_group_rules_default:
+    with: security_info in <% ctx(default_network_internal_rules) %>
+    action: stackstorm_openstack.security.group.rule.create
+      project=<% ctx().project_name %>
+      security_group="default"
+      direction=<% item(security_info).direction %>
+      ether_type=<% item(security_info).ether_type %>
+      protocol=<% item(security_info).protocol %>
+      remote_ip_prefix=<% item(security_info).remote_ip_prefix %>
+      dst_port=<% item(security_info).dst_port %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating Security Group Rules for 'Default' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_security_group_http:
+    action: stackstorm_openstack.security.group.create
+      project=<% ctx().project_name %>
+      name="HTTP"
+    next:
+      - when: <% succeeded() %>
+        do: create_security_group_rules_http
+      - when: <% failed() %>
+        publish: stderr="Failed creating Security Group 'HTTP' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_security_group_rules_http:
+    with: security_info in <% ctx(http_network_internal_rules) %>
+    action: stackstorm_openstack.security.group.rule.create
+      project=<% ctx().project_name %>
+      security_group="HTTP"
+      direction=<% item(security_info).direction %>
+      ether_type=<% item(security_info).ether_type %>
+      protocol=<% item(security_info).protocol %>
+      remote_ip_prefix=<% item(security_info).remote_ip_prefix %>
+      dst_port=<% item(security_info).dst_port %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating Security Group Rules for 'HTTP' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_security_group_https:
+    action: stackstorm_openstack.security.group.create
+      project=<% ctx().project_name %>
+      name="HTTPS"
+    next:
+      - when: <% succeeded() %>
+        do: create_security_group_rules_https
+      - when: <% failed() %>
+        publish: stderr="Failed creating Security Group 'HTTPS' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_security_group_rules_https:
+    with: security_info in <% ctx(https_network_internal_rules) %>
+    action: stackstorm_openstack.security.group.rule.create
+      project=<% ctx().project_name %>
+      security_group="HTTPS"
+      direction=<% item(security_info).direction %>
+      ether_type=<% item(security_info).ether_type %>
+      protocol=<% item(security_info).protocol %>
+      remote_ip_prefix=<% item(security_info).remote_ip_prefix %>
+      dst_port=<% item(security_info).dst_port %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating Security Group Rules for 'HTTPS' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_admin_roles:
+    with: <% ctx(admin_user_list) %>
+    action: stackstorm_openstack.role.add
+      project=<% ctx().project_name %>
+      role="admin"
+      user=<% item() %>
+      user_domain="default"
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed assigning admin roles for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_stfc_roles:
+    with: <% ctx(stfc_user_list) %>
+    action: stackstorm_openstack.role.add
+      project=<% ctx().project_name %>
+      role="user"
+      user=<% item() %>
+      user_domain="stfc"
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed assigning user(stfc) roles for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail

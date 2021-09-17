@@ -1,0 +1,15 @@
+---
+description: Show hypervisor properties.
+enabled: true
+entry_point: src/hypervisor.py
+name: hypervisor.show
+parameters:
+  submodule:
+    default: hypervisor_show
+    immutable: true
+    type: string
+  hypervisor:
+    description: Name of hypervisor to get properties for
+    required: true
+    type: string
+runner_type: python-script

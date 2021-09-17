@@ -1,0 +1,16 @@
+---
+description: Execute A Dynamic Action
+enabled: true
+entry_point: workflows/rabbit.execute.yaml
+name: rabbit.execute
+parameters:
+  action_inputs:
+    type: "object"
+    description: Inputs for Stackstorm Action
+    required: true
+  dynamic_action:
+    type: "string"
+    description: Name of Stackstorm action to run
+    required: true
+runner_type: "orquesta"
+

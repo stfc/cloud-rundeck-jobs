@@ -1,0 +1,68 @@
+---
+description: List servers
+enabled: true
+entry_point: src/search_openstack.py
+name: server.list
+parameters:
+  timeout:
+    default: 99999
+  submodule:
+    default: search_openstack
+    type: string
+    immutable: true
+  query_preset:
+    description: "name of a preset query - e.g server_shutoff: list all servers shutoff "
+    default: server_shutoff
+    type: string
+    required: true
+  search_by:
+    default: server
+    type: string
+    immutable: true
+  properties_to_select:
+    default:
+      - "server_id"
+      - "server_name"
+      - "server_status"
+      - "user_name"
+      - "user_email"
+    type: array
+    description: properties to display for servers younger than specified number of days
+    required: true
+  search_criteria:
+    type: array
+    description: additional properties to select for
+    required: false
+  sort_by_criteria:
+    type: array
+    description: properties to sort list by
+    required: false
+  get_html:
+    default: false
+    description: "If True, get HTML"
+    required: true
+    type: boolean
+  names:
+    description: names to search by (ignored unless query_preset=name_in, or name_contains etc)
+    type: array
+    default:
+      - ""
+    required: true
+  ids:
+    description: id to search by (ignored unless query_preset=id_in etc)
+    type: array
+    default:
+      - ""
+    required: true
+  name_snippets:
+    description: name snippets to search by (ignored unless query_preset=name_contains etc)
+    type: array
+    default:
+      - ""
+    required: true
+  days:
+    description: number of days threshold for selecting servers (ignored unless query_preset=server_older_than(_per_user) or server_younger_than(_per_user)
+    type: integer
+    default: 60
+    required: true
+runner_type: python-script

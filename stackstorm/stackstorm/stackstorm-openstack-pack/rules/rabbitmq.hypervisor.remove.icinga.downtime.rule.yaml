@@ -1,0 +1,18 @@
+---
+name: "rabbitmq.hypervisor.remove.icinga.downtime.rule"
+pack: "stackstorm_openstack"
+description: "Handles incoming trigger \"rabbit_message\" with message_type HYPERVISOR_REMOVE_ICINGA_DOWNTIME"
+enabled: true
+trigger:
+    type: stackstorm_send_notifications.rabbit_message
+
+criteria:
+    trigger.message_type:
+        type: "iequals"
+        pattern: "HYPERVISOR_REMOVE_ICINGA_DOWNTIME"
+
+action:
+    ref: stackstorm_send_notifications.rabbit.execute
+    parameters:
+        action_inputs: "{{ trigger.args }}"
+        dynamic_action: "stackstorm_openstack.hypervisor.remove.icinga.downtime"

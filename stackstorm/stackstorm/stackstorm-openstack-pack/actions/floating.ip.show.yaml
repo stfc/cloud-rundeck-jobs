@@ -1,0 +1,15 @@
+---
+description: Show floating IP Properties
+enabled: true
+entry_point: src/floating_ip.py
+name: floating.ip.show
+parameters:
+    submodule:
+        default: floating_ip_show
+        immutable: true
+        type: string
+    ip:
+        description: "floating IP ID"
+        required: true
+        type: string
+runner_type: python-script

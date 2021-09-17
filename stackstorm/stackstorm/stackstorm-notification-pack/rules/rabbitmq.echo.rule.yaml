@@ -1,0 +1,20 @@
+---
+name: "rabbitmq.echo.rule"
+pack: "stackstorm_send_notifications"
+description: "Handles incoming trigger \"rabbit_reply_message\" with message_type TEST_ECHO"
+enabled: true
+trigger:
+    type: stackstorm_send_notifications.rabbit_reply_message
+
+criteria:
+    trigger.message_type:
+        type: "iequals"
+        pattern: "TEST_ECHO"
+
+action:
+    ref: stackstorm_send_notifications.rabbit.execute.and.reply
+    parameters:
+        action_inputs: "{{ trigger.args }}"
+        dynamic_action: "core.echo"
+        routing_key: "{{ trigger.routing_key }}"
+        exchange: ""

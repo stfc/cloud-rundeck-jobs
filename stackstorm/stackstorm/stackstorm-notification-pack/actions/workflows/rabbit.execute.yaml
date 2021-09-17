@@ -1,0 +1,20 @@
+version: 1.0
+
+description: Execute a Stackstorm action based on Rabbit Payload
+
+input:
+  - action_inputs
+  - dynamic_action
+
+vars:
+  - reply_message: null
+
+tasks:
+  handle_rabbit_task:
+    action: "{{ ctx().dynamic_action }}"
+    input: "{{ ctx().action_inputs }}"
+    next:
+      - when: <% succeeded() %>
+        publish: reply_message="<% result().stdout %>"
+      - when: <% failed() %>
+        do: fail

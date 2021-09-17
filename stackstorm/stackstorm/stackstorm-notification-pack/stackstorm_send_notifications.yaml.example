@@ -1,0 +1,23 @@
+---
+smtp_accounts:
+  - name: "default"
+    password:
+    port: 465
+    secure: false
+    server: "examplemailserver.com"
+    smtp_auth: false
+    username:
+max_attachment_size: 1024
+attachment_datastore_ttl: 1800
+rabbit_config:
+  host: "localhost"
+  port: 5672
+  queue: "test_queue"
+  username:
+  password:
+  exchange: "test_exchange"
+  exchange_type: "direct"
+  exchange_durable: true
+  routing_key: "test_routing_key"
+  deserialization_method: "json"
+

@@ -1,0 +1,60 @@
+---
+description: List Hypervisors/Hosts
+enabled: true
+entry_point: src/search_openstack.py
+name: hypervisor.list
+parameters:
+  timeout:
+    default: 99999
+  submodule:
+    default: search_openstack
+    type: string
+    immutable: true
+  query_preset:
+    description: "name of a preset query"
+    default: "no_preset"
+    type: string
+    required: true
+  search_by:
+    default: host
+    type: string
+    immutable: true
+  properties_to_select:
+    default:
+      - "host_id"
+      - "host_name"
+      - "host_status"
+    type: array
+    description: properties to select
+    required: true
+  search_criteria:
+    type: array
+    description: additional properties to select for
+  sort_by_criteria:
+    type: array
+    description: properties to sort list by
+    required: false
+  get_html:
+    default: false
+    description: "If True, get HTML"
+    required: true
+    type: boolean
+  names:
+    description: names to search by (ignored unless query_preset=name_in, or name_contains etc)
+    type: array
+    default:
+      - ""
+    required: true
+  ids:
+    description: id to search by (ignored unless query_preset=id_in etc)
+    type: array
+    default:
+      - ""
+    required: true
+  name_snippets:
+    description: name snippets to search by (ignored unless query_preset=name_contains etc)
+    type: array
+    default:
+      - ""
+    required: true
+runner_type: python-script

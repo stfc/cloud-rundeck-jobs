@@ -1,0 +1,11 @@
+---
+greenbone_config:
+    db_file_path: ""
+    email_from: ""
+    header_file: "/html_files/header.html"
+    footer_file: "/html_files/footer.html"
+    subject: "Greenbone Scan Results: Critical or High Vulnerabilities"
+    smtp_account: "default"
+    attachments_tmp_dir_path: ""
+    admin_override_email:
+        - ""

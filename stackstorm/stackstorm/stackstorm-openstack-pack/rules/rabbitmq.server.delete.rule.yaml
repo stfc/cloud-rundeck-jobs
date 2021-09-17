@@ -1,0 +1,18 @@
+---
+name: "rabbitmq.server.delete.rule"
+pack: "stackstorm_openstack"
+description: "Handles incoming trigger \"rabbit_message\" with message_type DELETE_VM"
+enabled: true
+trigger:
+    type: stackstorm_send_notifications.rabbit_message
+
+criteria:
+    trigger.message_type:
+        type: "iequals"
+        pattern: "DELETE_VM"
+
+action:
+    ref: stackstorm_send_notifications.rabbit.execute
+    parameters:
+        action_inputs: "{{ trigger.args }}"
+        dynamic_action: "stackstorm_openstack.server.delete"

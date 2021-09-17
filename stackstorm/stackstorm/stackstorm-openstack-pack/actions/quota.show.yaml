@@ -1,0 +1,14 @@
+---
+description: Show quota for project
+enabled: true
+entry_point: src/quota.py
+name: quota.show
+parameters:
+    submodule:
+        default: quota_show
+        immutable: true
+        type: string
+    project:
+        description: "project to show quota for (Name or ID)"
+        type: string
+runner_type: python-script

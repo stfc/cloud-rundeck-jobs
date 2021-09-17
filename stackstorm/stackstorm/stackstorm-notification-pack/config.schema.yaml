@@ -1,0 +1,97 @@
+---
+smtp_accounts:
+  description: "SMTP accounts"
+  type: "array"
+  required: true
+  items:
+    type: "object"
+    required: true
+    properties:
+      name:
+        description: "Name of the account"
+        type: "string"
+        secret: false
+        required: true
+      server:
+        description: "Email server name - e.g. imap.gmail.com"
+        type: "string"
+        secret: false
+        required: true
+      username:
+        description: "Mailbox username"
+        type: "string"
+        required: false
+      password:
+        description: "Mailbox password."
+        type: "string"
+        secret: true
+        required: false
+      port:
+        description: "Port to connect to - e.g. 465, 587."
+        type: "integer"
+        default: 465
+        required: true
+      secure:
+        description: "Set to False to disable secure protocol. Default value is True."
+        type: "boolean"
+        default: true
+      smtp_auth:
+        description: "Authenticate username and password with SMTP server to send email. Default True"
+        type: "boolean"
+        default: true
+max_attachment_size:
+  description: "Maxium size of downloaded attachment in bytes (default 1024)"
+  type: "integer"
+  required: false
+  default: 1024
+attachment_datastore_ttl:
+  description: "TTL in seconds to keep attachments in the datastore. Default 1800"
+  type: "integer"
+  required: false
+  default: 1800
+rabbit_config:
+  description: "RabbitMQ Sensor settings"
+  type: "object"
+  required: true
+  additionalProperties: true
+  properties:
+    host:
+      description: "RabbitMQ host to connect to"
+      type: "string"
+      required: true
+    port:
+      description: "rabbit mq port"
+      type: "number"
+      required: true
+    queue:
+      description: "rabbit mq queue name"
+      type: "string"
+      required: true
+    username:
+      description: "Optional username for RabbitMQ"
+      type: "string"
+      required: false
+    password:
+      description: "Optional password for RabbitMQ"
+      type: "string"
+      secret: true
+      required: false
+    exchange:
+      description: "rabbit mq exchange name"
+      type: "string"
+      required: true
+    exchange_type:
+      description: "exchange type - direct, fanout etc)"
+      type: string
+      required: true
+    routing_key:
+      description: "rabbit mq routing key"
+      type: "string"
+      required: true
+    deserialization_method:
+      description: "Method used to deserialize body, default is no deserialization"
+      type: "string"
+      enum:
+        - "json"
+        - "pickle"
+      required: false

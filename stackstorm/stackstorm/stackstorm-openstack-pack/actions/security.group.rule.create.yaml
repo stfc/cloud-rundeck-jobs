@@ -1,0 +1,39 @@
+---
+description: Create a new security group rule
+enabled: true
+entry_point: src/security_group.py
+name: security.group.rule.create
+parameters:
+    submodule:
+        default: security_group_rule_create
+        immutable: true
+        type: string
+    security_group:
+        description: "Create rule in this security group (Name or ID)"
+        required: true
+        type: string
+    dst_port:
+        description: "Destination port, may be a range: 137:139 (Default: null;
+          only required for proto tcp and udp)"
+        default: null
+        type: string
+    project:
+        description: "Owner's project (Name or ID)"
+        type: string
+    direction:
+      default: "egress"
+      description: Direction the rule applies (egress or ingress)
+      type: string
+    ether_type:
+        default: IPv4
+        description: Ethertype of network traffic (IPv4, IPv6)
+        type: string
+    protocol:
+        default: tcp
+        description: IP protocol (icmp, tcp, udp; default - tcp)
+        type: string
+    remote_ip_prefix:
+        default: 0.0.0.0/0
+        description: Remote IP address block (may use CIDR notation; default - 0.0.0.0/0)
+        type: string
+runner_type: python-script

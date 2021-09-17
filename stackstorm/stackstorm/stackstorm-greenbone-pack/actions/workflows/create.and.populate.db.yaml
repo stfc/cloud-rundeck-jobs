@@ -1,0 +1,32 @@
+version: 1.0
+
+description: Creates and populates a new Greenbone DB
+
+input:
+  - db_file_path
+  - csv_path_list
+
+vars:
+  - stdout: null
+  - stderr: null
+
+output:
+  - stdout: <% ctx().stdout %>
+  - stderr: <% ctx().stderr %>
+
+tasks:
+  create_db:
+    action: stackstorm_greenbone.create.greenbone.db
+      db_file_path=<% ctx().db_file_path %>
+    next:
+      - when: <% succeeded() %>
+        do: populate_db
+
+  populate_db:
+    action: stackstorm_greenbone.populate.greenbone.db
+      db_file_path=<% ctx().db_file_path %>
+      csv_path_list=<% ctx().csv_path_list %>
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - stdout: <% result().stdout %>

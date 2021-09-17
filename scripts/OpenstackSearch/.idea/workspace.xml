@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="40aaf31c-01e7-4284-ae59-9a5801d0382f" name="Default Changelist" comment="added test jinja script">
+      <change afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/orquesta_test_5.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/workflows/orquesta-test-5.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/configs/example_encrypted.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/create_external_project.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/create_project.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/greet.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/openstack_list.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/orquesta_sequential.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/orquesta_test_2.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/orquesta_test_2.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/workflows/orquesta-sequential.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/workflows/orquesta-test-2.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/actions/workflows/orquesta-test-2.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/aliases/alias1.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/aliases/alias1.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/pack.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/pack.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../scripts/example_pack/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../scripts/example_pack/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/OpenstackSearch.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/OpenstackSearch.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../RabbitMQ/Message_Receivers/MessageReceiver.py" beforeDir="false" afterPath="$PROJECT_DIR$/../RabbitMQ/Message_Receivers/MessageReceiver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../RabbitMQ/Message_Receivers/ServerMessageReceiver.py" beforeDir="false" afterPath="$PROJECT_DIR$/../RabbitMQ/Message_Receivers/ServerMessageReceiver.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/query_openstack/queryopenstack/classes/list_servers.py" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectId" id="1vIdm6vnDVPusfPPrQd1uVongz8" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../../scripts/stackstorm_openstack/actions" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_openstack\actions" />
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_rabbitmq_examples" />
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_openstack\rules" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_openstack\rules" />
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_send_notifications\rules" />
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_send_notifications\sensors\depr" />
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_send_notifications\actions\workflows" />
+      <recent name="C:\Users\vgc59244\OneDrive - Science and Technology Facilities Council\Documents\scripts\stackstorm_openstack\actions\workflows" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="40aaf31c-01e7-4284-ae59-9a5801d0382f" name="Default Changelist" comment="" />
+      <created>1626253693001</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1626253693001</updated>
+    </task>
+    <task id="LOCAL-00001" summary="added test jinja script">
+      <created>1627469322789</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1627469322789</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="added test jinja script" />
+    <option name="LAST_COMMIT_MESSAGE" value="added test jinja script" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../../../../../scripts/stackstorm_openstack/actions/src/floating_ip.py</url>
+          <line>27</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../../../../../scripts/stackstorm_send_notifications/sensors/depr/rabbit_sensor.py</url>
+          <line>9</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

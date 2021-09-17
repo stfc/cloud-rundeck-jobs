@@ -1,0 +1,26 @@
+---
+description: Create Subnet
+enabled: true
+entry_point: src/subnet.py
+name: subnet.create
+parameters:
+    submodule:
+        default: subnet_create
+        immutable: True
+        type: string
+    network:
+        required: True
+        description: Network for subnet (Name or ID)
+        type: string
+    name:
+        required: True
+        description: Subnet Name
+        type: string
+    description:
+        description: Subnet description
+        type: string
+    is_dhcp_enabled:
+        required: True
+        description: 'Set to True if DHCP is enabled and False if DHCP is disabled. Type: bool'
+        type: boolean
+runner_type: python-script

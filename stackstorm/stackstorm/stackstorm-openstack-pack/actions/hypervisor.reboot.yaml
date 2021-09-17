@@ -1,0 +1,26 @@
+---
+description: Reboot a hypervisor.
+enabled: true
+entry_point: src/hypervisor.py
+name: hypervisor.reboot
+parameters:
+  submodule:
+    default: hypervisor_reboot
+    immutable: true
+    type: string
+  hypervisor:
+    description: Name of hypervisor which hosts service to disable
+    required: true
+    type: string
+  author:
+    description: User/Name of person who authorized downtime in Icinga
+    required: true
+    type: string
+    default: StackStorm
+  comment:
+    description: Comment/Reason for downtime in Icinga
+    required: true
+    type: string
+    default: Disabled by StackStorm - hypervisor reboot
+runner_type: python-script
+

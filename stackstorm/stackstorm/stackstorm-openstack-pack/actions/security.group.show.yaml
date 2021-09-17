@@ -1,0 +1,15 @@
+---
+description: Show security group properties
+enabled: true
+entry_point: src/security_group.py
+name: security.group.show
+parameters:
+    submodule:
+        default: security_group_show
+        immutable: true
+        type: string
+    group:
+        description: Name or ID of security group to show
+        required: true
+        type: string
+runner_type: python-script

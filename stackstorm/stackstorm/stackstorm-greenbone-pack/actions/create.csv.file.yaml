@@ -1,0 +1,29 @@
+---
+description: Create a CSV file to store vulnerability info
+enabled: true
+entry_point: src/Query.py
+name: create.csv.file
+parameters:
+    submodule:
+        default: create_csv_file
+        immutable: true
+        type: string
+    db_file_path:
+        description: File path to Sqlite3 DB
+        required: true
+        type: string
+        default: "~/greenbone/Greenbone.db"
+    as_admin:
+        description: Display info for admin (Hypervisors/VMs not found in openstack/Inactive/Server changed info)
+        type: boolean
+        default: false
+    user_id:
+        description: User ID to search for (Ignored if as_admin=true)
+        required: true
+        type: string
+    dir_path:
+        description: Directory path to store csv file
+        required: true
+        type: string
+        default: "/home/vgc59244/stackstorm_workspace/tmp/"
+runner_type: python-script

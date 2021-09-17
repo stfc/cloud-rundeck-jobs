@@ -1,0 +1,206 @@
+version: 1.0
+
+description: Create External Project Workflow
+
+
+input:
+  - project_name
+  - project_description
+  - network_name
+  - network_description
+  - subnet_name
+  - subnet_description
+  - router_name
+  - router_description
+  - ip_number
+  - admin_user_list
+  - stfc_user_list
+  - default_network_external_rules
+  - tcp_udp_egress_external_ips
+
+vars:
+  - stdout: null
+  - stderr: null
+
+output:
+  - stdout: <% ctx().stdout %>
+  - stderr: <% ctx().stderr %>
+
+tasks:
+  create_external_project:
+    action: stackstorm_openstack.project.create
+      name=<% ctx().project_name %>
+      description=<% ctx().project_description %>
+    next:
+      - when: <% succeeded() %>
+        do:
+          - create_security_group_default
+          - create_network
+          - set_default_quota
+          - create_admin_roles
+          - create_stfc_roles
+      - when: <% failed() %>
+        publish: stderr="Failed creating project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_network:
+    action: stackstorm_openstack.network.create
+      name=<% ctx().network_name %>
+      description=<% ctx().network_description %>
+      project=<% ctx().project_name %>
+      is_port_security_enabled=True
+      provider_network_type="vxlan"
+      is_router_external=False
+    next:
+      - when: <% succeeded() %>
+        do:
+          - create_rbac_policy
+          - floating_ip_create
+          - create_subnet
+      - when: <% failed() %>
+        publish: stderr="Failed creating network <% ctx().network_name %>, Error <% result() %>"
+        do: fail
+
+  create_rbac_policy:
+    action: stackstorm_openstack.network.rbac.create
+      object_type="network"
+      action="access_as_shared"
+      rbac_object=<% ctx().network_name %>
+      target_project=<% ctx().project_name %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating RBAC rules for Project <% ctx().project_name %> On Network <% ctx().network_name %>, Error <% result() %>"
+        do: fail
+
+  create_subnet:
+    action: stackstorm_openstack.subnet.create
+      name=<% ctx().subnet_name %>
+      description=<% ctx().subnet_description %>
+      network=<% ctx().network_name %>
+      is_dhcp_enabled=True
+    next:
+      - when: <% succeeded() %>
+        do: create_router
+      - when: <% failed() %>
+        publish: stderr="Failed creating subnet <% result() %>"
+        do: fail
+
+  create_router:
+    action: stackstorm_openstack.router.create
+      name=<% ctx().router_name %>
+      description=<% ctx().router_description %>
+      project=<% ctx().project_name %>
+      is_distributed=False
+      external_gateway="External"
+    next:
+      - when: <% succeeded() %>
+        do: router_add_subnet
+      - when: <% failed() %>
+        publish: stderr="Failed creating router <% ctx().router_name %>, Error <% result() %>"
+        do: fail
+
+  router_add_subnet:
+    action: stackstorm_openstack.router.add.interface router=<% ctx().router_name %> subnet=<% ctx().subnet_name %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed adding subnet <% ctx().subnet_name %> to router <% ctx().router_name %>, Error <% result() %> "
+        do: fail
+
+  set_default_quota:
+    action: stackstorm_openstack.quota.set project=<% ctx().project_name %> security_group_rules=200
+    next:
+      - when: <% succeeded() %>
+        do:
+          - create_security_group_rules
+          - create_tcp_rules
+          - create_udp_rules
+      - when: <% failed() %>
+        publish: stderr="Failed setting quota for project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_security_group_default:
+    action: stackstorm_openstack.security.group.list project=<% ctx().project_name %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating default network for Project <% ctx().project_name %>"
+        do: fail
+
+  create_security_group_rules:
+    with: security_info in <% ctx(default_network_external_rules) %>
+    action: stackstorm_openstack.security.group.rule.create
+      project=<% ctx().project_name %>
+      security_group="default"
+      direction=<% item(security_info).direction %>
+      ether_type=<% item(security_info).ether_type %>
+      protocol=<% item(security_info).protocol %>
+      remote_ip_prefix=<% item(security_info).remote_ip_prefix %>
+      dst_port=<% item(security_info).dst_port %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating Security Group
+          Rules for 'Default' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_tcp_rules:
+    with: <% ctx(egress_external_ips) %>
+    action: stackstorm_openstack.security.group.rule.create
+      project=<% ctx().project_name %>
+      security_group="default"
+      direction="egress"
+      ether_type="IPV4"
+      protocol="tcp"
+      remote_ip_prefix=<% item() %>
+      dst_port="1:65535"
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating tcp egress security group Rules for 'Default' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_udp_rules:
+    with: <% ctx(egress_external_ips) %>
+    action: stackstorm_openstack.security.group.rule.create
+      project=<% ctx().project_name %>
+      security_group="default"
+      direction="egress"
+      ether_type="IPV4"
+      protocol="udp"
+      remote_ip_prefix=<% item() %>
+      dst_port="1:65535"
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed creating udp egress security group Rules for 'Default' for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_admin_roles:
+    with: <% ctx(admin_user_list) %>
+    action: stackstorm_openstack.role.add
+      project=<% ctx().project_name %>
+      role="admin"
+      user=<% item() %>
+      user_domain="default"
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed assigning admin roles for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  create_stfc_roles:
+    with: <% ctx(stfc_user_list) %>
+    action: stackstorm_openstack.role.add
+      project=<% ctx().project_name %>
+      role="user"
+      user=<% item() %>
+      user_domain="stfc"
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed assigning user(stfc) roles for Project <% ctx().project_name %>, Error <% result() %>"
+        do: fail
+
+  floating_ip_create:
+    action: stackstorm_openstack.floating.ip.create
+      network="External"
+      project=<% ctx().project_name %>
+      number_to_create=<% ctx().ip_number %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="Failed assigning floating ips for project <% ctx().project_name %>, Error <% result() %>"
+        do: fail

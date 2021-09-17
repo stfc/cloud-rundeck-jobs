@@ -1,0 +1,57 @@
+---
+description: Send Email
+enabled: true
+entry_point: src/send_email.py
+name: send.email
+parameters:
+    send_as_html:
+        description: "If True Send Email as HTML, else as plain text"
+        required: true
+        type: boolean
+        default: true
+    admin_override:
+        description: "Override sending emails to instead send to one test email address"
+        required: true
+        type: boolean
+        default: false
+    admin_override_email:
+        description: "If admin_override enabled, will send all emails to this instead of to specified sender"
+        required: true
+        type: array
+    smtp_account:
+        description: "SMTP Account to use. Must be configured in email.yaml"
+        required: true
+        type: string
+    email_to:
+        description: "Recipient Email Addresses"
+        required: true
+        type: array
+    email_from:
+        description: "Sender Email Address"
+        required: true
+        type: string
+    email_cc:
+        description: "Email Addresses to Cc in"
+        required: false
+        type: array
+    body:
+        description: "Email Body"
+        required: true
+        type: string
+    subject:
+        description: "Email Subject"
+        required: true
+        type: string
+    header:
+        description: "Email Standard Header filepath"
+        required: true
+        type: string
+    footer:
+        description: "Email Standard Footer filepath"
+        required: true
+        type: string
+    attachment_filepaths:
+        description: "Filepaths to email attachments"
+        required: false
+        type: array
+runner_type: python-script

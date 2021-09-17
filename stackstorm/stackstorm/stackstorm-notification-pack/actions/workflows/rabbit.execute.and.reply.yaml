@@ -1,0 +1,45 @@
+version: 1.0
+
+description: Execute a Stackstorm action and post results as Rabbitmq message
+
+input:
+  - host
+  - port
+  - username
+  - password
+  - exchange
+  - exchange_type
+  - exchange_durable
+  - routing_key
+  - action_inputs
+  - dynamic_action
+
+vars:
+  - reply_message: null
+
+tasks:
+  handle_rabbit_task:
+    action: "{{ ctx().dynamic_action }}"
+    input: "{{ ctx().action_inputs }}"
+    next:
+      - when: <% succeeded() %>
+        publish: reply_message="<% result().stdout %>"
+        do: send_reply
+      - when: <% failed() %>
+        do: fail
+
+  send_reply:
+    action: stackstorm_send_notifications.rabbit.send.message
+      host=<% ctx().host %>
+      port=<% ctx().port %>
+      username=<% ctx().username %>
+      password=<% ctx().password %>
+      exchange=<% ctx().exchange %>
+      exchange_type=<% ctx().exchange_type %>
+      exchange_durable=<% ctx().exchange_durable %>
+      routing_key=<% ctx().routing_key %>
+      message=<% ctx().reply_message %>
+    next:
+      - when: <% failed() %>
+        publish: stderr="failed sending reply <% ctx().reply_message %>"
+        do: fail

@@ -1,0 +1,15 @@
+---
+description: Shutdown Server
+enabled: true
+entry_point: src/server.py
+name: server.shutdown
+parameters:
+    submodule:
+        default: server_shutdown
+        immutable: true
+        type: string
+    server:
+        description: Server Name or ID
+        required: true
+        type: string
+runner_type: python-script

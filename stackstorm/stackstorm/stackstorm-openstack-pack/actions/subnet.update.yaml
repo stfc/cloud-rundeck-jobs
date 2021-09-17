@@ -1,0 +1,20 @@
+#TODO Subnet Update
+---
+description: Subnet Update
+enabled: true
+entry_point: src/subnet.py
+name: subnet.update
+parameters:
+    submodule:
+        default: subnet_update
+        immutable: True
+        type: string
+    router:
+        description: Subnet to update (name or ID)
+        required: true
+        type: string
+    update_kwargs:
+        description: Subnet args to update
+        required: true
+        type: object
+runner_type: python-script

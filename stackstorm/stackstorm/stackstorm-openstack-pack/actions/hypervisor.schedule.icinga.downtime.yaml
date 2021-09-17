@@ -1,0 +1,56 @@
+---
+description: Schedule Icinga Downtime for a Host/Hypervisor. Will schedule downtimes for all services on hypervisor
+enabled: true
+entry_point: src/hypervisor.py
+name: hypervisor.schedule.icinga.downtime
+parameters:
+  submodule:
+    default: hypervisor_schedule_icinga_downtime
+    immutable: true
+    type: string
+  hypervisor:
+    description: Name or ID of hypervisor to schedule downtimes for
+    required: true
+    type: string
+  start_time_unix:
+    description: Unix Time start time for downtime
+    required: true
+    type: string
+    default: ""
+  end_time_unix:
+    description: Unix Time end time for downtime
+    required: true
+    type: string
+    default: ""
+  start_time_str:
+    description: "YYYY-MM-DD, HH:MM:SS format of start time - ignored if unix time given"
+    required: true
+    type: string
+    default: ""
+  end_time_str:
+    description: "YYYY-MM-DD, HH:MM:SS format of end time - ignored if unix time given"
+    required: true
+    type: string
+    default: ""
+  author:
+    description: "Name of author who scheduled the downtime"
+    required: true
+    type: string
+    default: StackStorm
+  comment:
+    description: "Comment/Reason for scheduling downtime - displayed on Icinga"
+    required: true
+    type: string
+    default: "Scheduled using Stackstorm - reason not given"
+  is_flexible:
+    description: "If Icinga downtime is flexible"
+    required: true
+    type: boolean
+    default: false
+  flexible_duration:
+    description: "Icinga flexible duration"
+    required: true
+    type: number
+    default: 0
+runner_type: python-script
+

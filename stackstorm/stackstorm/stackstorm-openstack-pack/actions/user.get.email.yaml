@@ -1,0 +1,19 @@
+---
+description: Get user email
+enabled: true
+entry_point: src/user.py
+name: user.get.email
+parameters:
+    submodule:
+        default: user_get_email
+        immutable: true
+        type: string
+    user:
+        description: "User to get email address for (name or ID)"
+        required: true
+        type: string
+    user_domain:
+        description: "User domain (name or ID)"
+        type: string
+        default: default
+runner_type: python-script

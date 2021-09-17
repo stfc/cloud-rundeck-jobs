@@ -1,0 +1,61 @@
+---
+description: Email notifications for error emails
+enabled: true
+entry_point: workflows/send.server.email.yaml
+name: send.server.email
+parameters:
+    server_list_func:
+        default: server_shutoff_per_user
+        type: string
+        required: true
+    days:
+        description: number of days threshold for selecting servers (ignored unless submodule=server_older_than(_per_user) or server_younger_than(_per_user)
+        type: integer
+        default: 60
+        required: true
+    email_from:
+        description: "Email address to send email from"
+        required: true
+        type: string
+        default: "cloud-support@gridpp.rl.ac.uk"
+    header:
+        description: "Email Standard Header filepath"
+        required: true
+        type: string
+        default: "/home/vgc59244/html_templates/header.html"
+    footer:
+        description: "Email Standard Footer filepath"
+        required: true
+        type: string
+        default: "/home/vgc59244/html_templates/footer.html"
+    subject:
+        description: "Email subject tag line"
+        required: true
+        type: string
+        default: "Test Message"
+    smtp_account:
+        description: "SMTP Account to use. Must be configured in email.yaml"
+        required: true
+        type: string
+        default: "default"
+    send_html:
+        default: true
+        description: "Send Email Body as HTML"
+        required: true
+        type: boolean
+    admin_override:
+        default: false
+        description: "Overrides email sending to send to a single email for testing purposes"
+        required: true
+        type: boolean
+    admin_override_email:
+        default:
+        description: "Override email sending to send all to this email"
+        required: true
+        type: array
+    attachments_tmp_dir_path:
+        description: "Dir path to store temporary csv attachment files"
+        required: true
+        type: string
+        default: "/home/vgc59244/tmp/"
+runner_type: orquesta

@@ -1,0 +1,15 @@
+---
+description: Remove Icinga Downtime for a Host/Hypervisor. Will remove downtimes for all services on hypervisor if exist
+enabled: true
+entry_point: src/hypervisor.py
+name: hypervisor.remove.icinga.downtime
+parameters:
+  submodule:
+    default: hypervisor_remove_icinga_downtime
+    immutable: true
+    type: string
+  hypervisor:
+    description: Name or ID of hypervisor to remove downtimes for
+    required: true
+    type: string
+runner_type: python-script

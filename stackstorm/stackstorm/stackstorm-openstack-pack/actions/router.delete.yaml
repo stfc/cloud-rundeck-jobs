@@ -1,0 +1,15 @@
+---
+description: Delete Router
+enabled: true
+entry_point: src/router.py
+name: router.delete
+parameters:
+    submodule:
+        default: router_delete
+        immutable: True
+        type: string
+    router:
+        description: Router to delete (name or ID)
+        required: true
+        type: string
+runner_type: python-script

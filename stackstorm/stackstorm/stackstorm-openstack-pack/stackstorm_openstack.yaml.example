@@ -1,0 +1,28 @@
+---
+icinga_config:
+  url: 
+  username: 
+  password: 
+  host_endpoint:
+  downtime_endpoint: 
+  schedule_downtime_endpoint: 
+  remove_downtime_endpoint: 
+
+external_network:
+  - direction:
+    ether_type: 
+    protocol: 
+    remote_ip_prefix: 
+    dst_port:
+
+external_egress_ips:
+ 
+internal_network:
+  - direction: 
+    ether_type: 
+    protocol:
+    remote_ip_prefix: 
+    dst_port:
+
+
+

@@ -1,0 +1,21 @@
+---
+description: Remove Interface from Router
+enabled: true
+entry_point: src/router.py
+name: router.remove.interface
+parameters:
+    submodule:
+        default: router_remove_interface
+        immutable: true
+        type: string
+    router:
+        description: Router (Name or ID)
+        required: true
+        type: string
+    subnet:
+        description: Subnet (Name or ID)
+        type: string
+    port:
+        description: Port (Name or ID)
+        type: string
+runner_type: python-script
