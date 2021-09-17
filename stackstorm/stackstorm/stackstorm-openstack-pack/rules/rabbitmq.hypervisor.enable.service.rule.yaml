@@ -1,0 +1,18 @@
+---
+name: "rabbitmq.hypervisor.enable.service.rule"
+pack: "stackstorm_openstack"
+description: "Handles incoming trigger \"rabbit_message\" with message_type HYPERVISOR_ENABLE_SERVICE"
+enabled: true
+trigger:
+    type: stackstorm_send_notifications.rabbit_message
+
+criteria:
+    trigger.message_type:
+        type: "iequals"
+        pattern: "HYPERVISOR_ENABLE_SERVICE"
+
+action:
+    ref: stackstorm_send_notifications.rabbit.execute
+    parameters:
+        action_inputs: "{{ trigger.args }}"
+        dynamic_action: "stackstorm_openstack.hypervisor.service.enable"

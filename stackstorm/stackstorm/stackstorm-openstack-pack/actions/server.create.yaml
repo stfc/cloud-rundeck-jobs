@@ -1,0 +1,35 @@
+---
+description: Create Server
+enabled: true
+entry_point: src/server.py
+name: server.create
+parameters:
+    submodule:
+        default: server_create
+        immutable: true
+        type: string
+    name:
+        description: Name of new server
+        required: true
+        type: string
+    image:
+        description: Image Name or ID for new server
+        required: true
+        type: string
+    flavor:
+      description: Flavor Name or ID for new server
+      required: true
+      type: string
+    network:
+      description: Network Name or ID for new server
+      required: false
+      type: string
+    hypervisor:
+      description: Hypervisor Name or ID for new server
+      required: false
+      type: string
+    zone:
+      description: zone name for new server
+      required: false
+      type: string
+runner_type: python-script

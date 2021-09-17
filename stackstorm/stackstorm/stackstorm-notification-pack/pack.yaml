@@ -1,0 +1,21 @@
+---
+ref: stackstorm_send_notifications
+
+name: Scripts To Send Messages and Emails
+
+description: Pack containing scripts to automate email sending
+
+keywords:
+  - openstack
+
+version: 1.0.0
+
+python_versions:
+  - "3"
+
+dependencies:
+  - core
+
+author: Anish Mudaraddi
+
+email: anish.mudaraddi@stfc.ac.uk

@@ -1,0 +1,25 @@
+---
+description: Get information from Greenbone DB for user
+enabled: true
+entry_point: src/Query.py
+name: get.info.for.user
+parameters:
+    submodule:
+        default: get_info_for_user
+        immutable: true
+        type: string
+    db_file_path:
+        description: "File path to Sqlite3 DB"
+        required: true
+        type: "string"
+        default: "~/greenbone/Greenbone.db"
+    user_id:
+        description: "User ID to query for Greenbone vulnerabilities"
+        required: true
+        type: string
+    get_html:
+        default: false
+        description: "If True, get HTML body"
+        required: true
+        type: boolean
+runner_type: python-script

@@ -1,0 +1,15 @@
+---
+description: Show Network RBAC rule properties
+enabled: true
+entry_point: src/network.py
+name: network.rbac.show
+parameters:
+    submodule:
+        default: network_rbac_show
+        immutable: true
+        type: string
+    rbac_policy:
+        description: RBAC policy Name or ID
+        required: True
+        type: string
+runner_type: python-script

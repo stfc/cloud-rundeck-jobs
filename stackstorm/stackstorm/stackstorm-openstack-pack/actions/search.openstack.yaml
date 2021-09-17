@@ -1,0 +1,47 @@
+---
+description: Search Openstack
+enabled: true
+entry_point: src/search_openstack.py
+name: search.openstack
+parameters:
+  timeout:
+    default: 99999
+  submodule:
+    default: search_openstack
+    immutable: true
+    type: string
+  search_by:
+    description: Search For Specific Resource Type
+    type: string
+    default: server
+    immutable: true
+    enum:
+      - project
+      - host
+      - ip
+      - user
+      - server
+  properties_list:
+    description: Properties to get
+    type: array
+    default:
+      - "server_id"
+      - "server_name"
+      - "server_status"
+      - "user_name"
+      - "user_email"
+    required: true
+  criteria_list:
+    description: Criteria to Select By
+    type: array
+    required: false
+  sort_by_list:
+    description: properties to sort result by
+    required: false
+  as_html:
+    description: display as html instead of plaintext
+    type: boolean
+    default: false
+    required: true
+runner_type: python-script
+

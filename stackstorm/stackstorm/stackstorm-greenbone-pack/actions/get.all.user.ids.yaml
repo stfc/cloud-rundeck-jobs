@@ -1,0 +1,17 @@
+---
+description: Get All User IDs from Greenbone DB
+enabled: true
+entry_point: src/Query.py
+name: get.all.user.ids
+parameters:
+    submodule:
+        default: get_user_ids
+        immutable: true
+        type: "string"
+    db_file_path:
+        description: "File path to Sqlite3 DB"
+        required: true
+        type: "string"
+        default: "~/greenbone/Greenbone.db"
+
+runner_type: python-script

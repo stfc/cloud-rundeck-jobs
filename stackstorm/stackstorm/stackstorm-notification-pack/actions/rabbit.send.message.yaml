@@ -1,0 +1,51 @@
+---
+name: "rabbit.send.message"
+description: "Publish a message in RabbitMQ"
+enabled: true
+entry_point: "src/rabbit_send_message.py"
+parameters:
+  host:
+    type: "string"
+    description: "Hostname or IP Address to connect to"
+    required: true
+    default: "localhost"
+  port:
+    type: "integer"
+    description: "TCP port to connect to"
+    required: true
+    default: 5672
+  username:
+    type: "string"
+    description: "The username to connect with"
+    required: true
+    default: "admin"
+  password:
+    type: "string"
+    description: "The password to authenticate with"
+    required: true
+    default: "admin"
+  exchange:
+    type: "string"
+    description: "The exchange to publish the message on"
+    required: true
+    default: "test_exchange"
+  exchange_type:
+    type: "string"
+    description: "The type of exchange"
+    default: "direct"
+    required: true
+  exchange_durable:
+    type: "boolean"
+    description: "Whether or not the exchange is durable"
+    required: true
+    default:  true
+  routing_key:
+    type: "string"
+    description: "The routing key for the message"
+    required: true
+    default: "test_routing_key"
+  message:
+    type: "string"
+    description: "The message"
+    required: true
+runner_type: "python-script"

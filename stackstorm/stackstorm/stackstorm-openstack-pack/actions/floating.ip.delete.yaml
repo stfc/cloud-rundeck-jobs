@@ -1,0 +1,15 @@
+---
+description: Delete floating IP
+enabled: true
+entry_point: src/floating_ip.py
+name: floating.ip.delete
+parameters:
+    submodule:
+        default: floating_ip_delete
+        immutable: true
+        type: string
+    ip:
+        description: "floating IP ID"
+        required: true
+        type: string
+runner_type: python-script

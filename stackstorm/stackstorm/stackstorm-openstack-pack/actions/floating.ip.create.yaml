@@ -1,0 +1,22 @@
+---
+description: Create floating IP
+enabled: true
+entry_point: src/floating_ip.py
+name: floating.ip.create
+parameters:
+    submodule:
+        default: floating_ip_create
+        immutable: true
+        type: string
+    network:
+        description: "Network to allocate floating IP from (Name or ID)"
+        required: true
+        type: string
+    project:
+        description: "Owner's project (Name or ID)"
+        type: string
+    number_to_create:
+        description: "Number of IPs to create"
+        default: 1
+        type: integer
+runner_type: python-script

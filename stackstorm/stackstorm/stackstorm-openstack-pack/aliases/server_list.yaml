@@ -1,0 +1,27 @@
+---
+name: "server_list"
+action_ref: "stackstorm_openstack.server.list"
+description: "Get Server information that match certain criteria"
+formats:
+    - display: "server list {{properties_to_select}} preset {{query_preset}} {{ search_criteria }} sort by {{sort_by_criteria}}"
+      representation:
+        - "(server|Server|VM|vm) list( properties {{properties_to_select=server_id,server_name,server_status,user_name,user_email}})?( preset {{query_preset=no_preset}})?( sort_by {{sort_by_criteria=NULL}})?( days={{days=NULL}})?( names={{names=NULL}})?( name_snippets={{name_snippets=NULL}})?( ids={{ids=NULL}})?"
+        - "(server|Server|VM|vm) list( properties {{properties_to_select=server_id,server_name,server_status,user_name,user_email}})? criteria {{search_criteria=NULL}}( sort_by {{sort_by_criteria=NULL}})?"
+
+ack:
+  enabled: true
+  append_url: false
+  format: "Executing `{{ actionalias.ref }}`, your ID is `{{ execution.id[:2] }}..{{ execution.id[-2:] }}`. This will take up to 10 minutes"
+result:
+  format: "action completed!"
+  extra:
+    slack:
+      fields:
+        - title: Action Debug Information
+          value: "```{{ execution.result.stdout | json_escape  }}```"
+        - title: Result
+          value: "```{{ execution.result.result | json_escape }}```"
+
+
+
+

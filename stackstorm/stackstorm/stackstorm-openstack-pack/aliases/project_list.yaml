@@ -1,0 +1,24 @@
+---
+name: "project_list"
+action_ref: "stackstorm_openstack.project.list"
+description: "Get User information that match certain criteria"
+formats:
+  - display: "project list properties {{properties_to_select}}; (preset {{query_preset}}; | criteria {{search_criteria}};) sort_by {{sort_by_criteria}};"
+    representation:
+      - "project(s)? list( properties {{properties_to_select=project_id,project_name,project_description}})?( preset {{query_preset=no_preset}})?( sort_by {{sort_by_criteria=NULL}})?( names={{names=NULL}})?( name_snippets={{name_snippets=NULL}})?( ids={{ids=NULL}})?"
+      - "project(s)? list( properties {{properties_to_select=project_id,project_name,project_description}})? criteria {{search_criteria=NULL}}( sort_by {{sort_by_criteria=NULL}})?"
+
+ack:
+  enabled: true
+  append_url: false
+  format: "Executing `{{ actionalias.ref }}`, your ID is `{{ execution.id[:2] }}..{{ execution.id[-2:] }}`"
+result:
+  format: "action completed!"
+  extra:
+    slack:
+      fields:
+        - title: Action Debug Information
+          value: "```{{ execution.result.stdout | json_escape  }}```"
+        - title: Result
+          value: "```{{ execution.result.result | json_escape }}```"
+

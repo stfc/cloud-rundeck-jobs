@@ -1,0 +1,17 @@
+---
+description: Creates an empty Greenbone.db file with predefined tables
+enabled: true
+entry_point: src/Create_DB.py
+name: create.greenbone.db
+parameters:
+    submodule:
+        default: create_tables
+        immutable: true
+        type: string
+    db_file_path:
+        description: "File path to new Sqlite3 Greenbone DB"
+        required: true
+        type: "string"
+        default: "~/greenbone/Greenbone.db"
+
+runner_type: python-script

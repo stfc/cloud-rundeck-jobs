@@ -1,0 +1,15 @@
+---
+description: Delete Server
+enabled: true
+entry_point: src/server.py
+name: server.delete
+parameters:
+    submodule:
+        default: server_delete
+        immutable: true
+        type: string
+    server:
+        description: Name or ID of server to delete
+        required: true
+        type: string
+runner_type: python-script

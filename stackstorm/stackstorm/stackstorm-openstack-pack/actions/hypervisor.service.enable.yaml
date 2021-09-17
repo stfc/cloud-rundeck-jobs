@@ -1,0 +1,20 @@
+---
+description: Enable a service on a hypervisor.
+enabled: true
+entry_point: src/hypervisor.py
+name: hypervisor.service.enable
+parameters:
+  submodule:
+    default: hypervisor_service_enable
+    immutable: true
+    type: string
+  hypervisor:
+    description: Name of hypervisor which hosts service to enable
+    required: true
+    type: string
+  service_binary:
+    description: Service to enable on hypervisor
+    required: true
+    type: string
+runner_type: python-script
+

@@ -1,0 +1,15 @@
+---
+description: Show Subnet properties
+enabled: true
+entry_point: src/subnet.py
+name: subnet.show
+parameters:
+    submodule:
+        default: subnet_show
+        immutable: True
+        type: string
+    subnet:
+        required: True
+        description: Subnet Name or ID
+        type: string
+runner_type: python-script

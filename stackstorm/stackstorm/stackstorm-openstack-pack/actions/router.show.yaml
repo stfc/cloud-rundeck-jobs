@@ -1,0 +1,15 @@
+---
+description: Router show
+enabled: true
+entry_point: src/router.py
+name: router.show
+parameters:
+    submodule:
+        default: router_show
+        immutable: True
+        type: string
+    router:
+        description: Router to show (name or ID)
+        required: true
+        type: string
+runner_type: python-script

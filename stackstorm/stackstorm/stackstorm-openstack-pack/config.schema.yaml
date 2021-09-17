@@ -1,0 +1,138 @@
+---
+  icinga_config:
+    description: "Icinga config"
+    type: "object"
+    required: true
+    properties:
+      url:
+        description: "URL for Icinga API"
+        type: "string"
+        required: true
+        secret: true
+      username:
+        description: "Username for Icinga API"
+        type: "string"
+        required: true
+        secret: true
+      password:
+        description: "Password for Icinga API"
+        type: "string"
+        required: true
+        secret: true
+      host_endpoint:
+        description: "URL for Icinga API"
+        type: "string"
+        required: true
+        secret: true
+      downtime_endpoint:
+        description: "URL for Getting Icinga Downtimes"
+        type: "string"
+        required: true
+        secret: true
+      schedule_downtime_endpoint:
+        description: "URL for Scheduling Icinga Downtime"
+        type: "string"
+        required: true
+        secret: true
+      remove_downtime_endpoint:
+        description: "URL for Removing Icinga Downtimes"
+        type: "string"
+        required: true
+        secret: true
+  external_network:
+    description: "External Network Creation Rules"
+    type: "array"
+    required: true
+    items:
+      type: "object"
+      required: true
+      properties:
+        direction:
+          description: "Network flow direction - ingress / egress"
+          type: "string"
+          enum:
+            - "ingress"
+            - "egress"
+          required: true
+          secret: true
+        ether_type:
+          description: "Network ether type - IPv4 / IPv6"
+          type: "string"
+          enum:
+            - "IPv4"
+            - "IPv6"
+          required: true
+          secret: true
+        protocol:
+          description: "Network protocol - tcp / udp / icmp"
+          type: "string"
+          enum:
+            - "tcp"
+            - "udp"
+            - "icmp"
+          required: true
+          secret: true
+        remote_ip_prefix:
+          description: "Network remote IP prefix"
+          type: "string"
+          required: true
+          secret: true
+        dst_port:
+          description: "Network dst port range start_port:end_port"
+          type: "string"
+          required: false
+          secret: true
+  external_egress_ips:
+    description: "IPs to apply udp/tcp egress rules for external projects"
+    type: "array"
+    required: true
+    items:
+      type: "string"
+      required: true
+      secret: true
+  internal_network:
+    description: "Internal Network Creation Rules"
+    type: "array"
+    required: true
+    items:
+      type: "object"
+      required: true
+      properties:
+        direction:
+          description: "Network flow direction - ingress / egress"
+          type: "string"
+          enum:
+            - "ingress"
+            - "egress"
+          required: true
+          secret: true
+        ether_type:
+          description: "Network ether type - IPv4 / IPv6"
+          type: "string"
+          enum:
+            - "IPv4"
+            - "IPv6"
+          required: true
+          secret: true
+        protocol:
+          description: "Network protocol - tcp / udp / icmp"
+          type: "string"
+          enum:
+            - "tcp"
+            - "udp"
+            - "icmp"
+          required: true
+          secret: true
+        remote_ip_prefix:
+          description: "Network remote IP prefix"
+          type: "string"
+          required: true
+          secret: true
+        dst_port:
+          description: "Network dst port range start_port:end_port"
+          type: "string"
+          required: false
+          secret: true
+
+
+

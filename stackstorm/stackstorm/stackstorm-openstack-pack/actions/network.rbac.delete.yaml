@@ -1,0 +1,15 @@
+---
+description: Delete Network RBAC rule
+enabled: true
+entry_point: src/network.py
+name: network.rbac.delete
+parameters:
+    submodule:
+        default: network_rbac_delete
+        immutable: true
+        type: string
+    rbac_policy:
+        description: RBAC policy Name or ID
+        required: True
+        type: string
+runner_type: python-script

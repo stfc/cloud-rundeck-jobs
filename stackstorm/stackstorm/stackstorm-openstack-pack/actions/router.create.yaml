@@ -1,0 +1,34 @@
+---
+description: Create Router
+enabled: true
+entry_point: src/router.py
+name: router.create
+parameters:
+    submodule:
+        default: router_create
+        immutable: True
+        type: string
+    project:
+        description: Project to display (name or ID)
+        required: True
+        type: string
+    external_gateway:
+        description: External Gateway Network (Name or ID)
+        type: string
+    name:
+        description: New Router Name
+        required: True
+        type: string
+    description:
+        description: New Router Description
+        required: True
+        type: string
+    is_distributed:
+        description: The distributed state of the router, which is distributed True or not False
+        type: boolean
+        default: False
+    is_ha:
+        description: The highly-available state of the router, which is highly available True or not False.
+        type: boolean
+        default: False
+runner_type: python-script

@@ -1,0 +1,21 @@
+---
+description: Create a new security group
+enabled: true
+entry_point: src/security_group.py
+name: security.group.create
+parameters:
+    submodule:
+        default: security_group_create
+        immutable: true
+        type: string
+    name:
+        description: New security group name
+        required: true
+        type: string
+    description:
+        description: Security group description
+        type: string
+    project:
+        description: Owner's project (Name or ID)
+        type: string
+runner_type: python-script

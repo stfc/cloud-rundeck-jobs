@@ -1,0 +1,20 @@
+---
+description: Server change status
+enabled: true
+entry_point: src/server.py
+name: server.change.status
+parameters:
+    submodule:
+        default: server_change_status
+        immutable: true
+        type: string
+    server:
+        description: Server Name or ID
+        required: true
+        type: string
+    status_change:
+        description: Status change to perform
+        required: true
+        type: string
+        default: suspend
+runner_type: python-script

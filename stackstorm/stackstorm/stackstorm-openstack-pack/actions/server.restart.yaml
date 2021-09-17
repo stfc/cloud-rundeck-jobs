@@ -1,0 +1,15 @@
+---
+description: Restart Server
+enabled: true
+entry_point: src/server.py
+name: server.restart
+parameters:
+    submodule:
+        default: server_restart
+        immutable: true
+        type: string
+    server:
+        description: Server Name or ID
+        required: true
+        type: string
+runner_type: python-script

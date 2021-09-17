@@ -1,0 +1,19 @@
+---
+description: Show Network properties
+enabled: true
+entry_point: src/network.py
+name: network.show
+parameters:
+    submodule:
+        default: network_show
+        immutable: true
+        type: string
+    network:
+        description: Network Name or ID
+        required: True
+        type: string
+    project:
+      description: Project which contains Network Name or ID
+      required: True
+      type: string
+runner_type: python-script

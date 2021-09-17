@@ -1,0 +1,51 @@
+---
+description: List Float IPs
+enabled: true
+entry_point: src/search_openstack.py
+name: float.ip.list
+parameters:
+  timeout:
+    default: 99999
+  submodule:
+    default: search_openstack
+    type: string
+    immutable: true
+  query_preset:
+    description: "name of a preset query"
+    default: "no_preset"
+    type: string
+    required: true
+  search_by:
+    default: ip
+    type: string
+    immutable: true
+  properties_to_select:
+    default:
+      - "ip_id"
+      - "ip_fixed_address"
+      - "ip_floating_address"
+      - "ip_port_id"
+      - "project_id"
+    type: array
+    description: properties to select
+    required: true
+  search_criteria:
+    type: array
+    description: additional properties to select for
+    required: false
+  sort_by_criteria:
+    type: array
+    description: properties to sort list by
+    required: false
+  get_html:
+    default: false
+    description: "If True, get HTML"
+    required: true
+    type: boolean
+  ids:
+    description: id to search by (ignored unless query_preset=id_in etc)
+    type: array
+    default:
+      - ""
+    required: true
+runner_type: python-script

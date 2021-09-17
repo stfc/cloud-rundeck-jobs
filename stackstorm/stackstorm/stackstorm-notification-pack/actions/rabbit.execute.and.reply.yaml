@@ -1,0 +1,56 @@
+---
+description: Execute A Dynamic Action and reply back with result
+enabled: true
+entry_point: workflows/rabbit.execute.and.reply.yaml
+name: rabbit.execute.and.reply
+parameters:
+  action_inputs:
+    type: "object"
+    description: Inputs for Stackstorm Action
+    required: true
+  dynamic_action:
+    type: "string"
+    description: Name of Stackstorm action to run
+    required: true
+  host:
+    type: "string"
+    description: "Hostname or IP Address to connect to"
+    required: true
+    default: "localhost"
+  port:
+    type: "integer"
+    description: "TCP port to connect to"
+    required: true
+    default: 5672
+  username:
+    type: "string"
+    description: "The username to connect with"
+    required: true
+    default: "guest"
+  password:
+    type: "string"
+    description: "The password to authenticate with"
+    required: true
+    default: "guest"
+  exchange:
+    type: "string"
+    description: "The exchange to publish the message on"
+    required: true
+    default: "test_exchange"
+  exchange_type:
+    type: "string"
+    description: "The type of exchange"
+    default: "direct"
+    required: true
+  exchange_durable:
+    type: "boolean"
+    description: "Whether or not the exchange is durable"
+    required: true
+    default: true
+  routing_key:
+    type: "string"
+    description: "The routing key for the message"
+    required: true
+    default: "test_routing_key"
+runner_type: "orquesta"
+

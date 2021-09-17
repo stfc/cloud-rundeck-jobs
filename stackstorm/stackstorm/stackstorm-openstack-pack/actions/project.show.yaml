@@ -1,0 +1,19 @@
+---
+description: Show Project properties
+enabled: true
+entry_point: src/project.py
+name: project.show
+parameters:
+    submodule:
+        default: project_show
+        immutable: true
+        type: string
+    project:
+        description: Project to display (name or ID)
+        required: true
+        type: string
+    domain:
+        description: Project domain (name or ID) default - default
+        default: default
+        type: string
+runner_type: python-script

@@ -1,0 +1,27 @@
+---
+description: Validate if user has given role in project
+enabled: true
+entry_point: src/role.py
+name: role.validate.user
+parameters:
+    submodule:
+        default: role_validate_user
+        immutable: true
+        type: string
+    project:
+        description: Project (Name or ID)
+        required: true
+        type: string
+    role:
+        description: Role (Name or ID)
+        required: true
+        type: string
+    user:
+        description: User (Name or ID)
+        type: string
+        required: true
+    user_domain:
+        description: User Domain (Name or ID)
+        default: default
+        type: string
+runner_type: python-script

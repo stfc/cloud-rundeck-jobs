@@ -1,0 +1,75 @@
+version: 1.0
+
+description: Send Emails to Users with VMs that match query
+
+input:
+  - email_from
+  - query_preset
+  - criteria_list
+  - footer
+  - header
+  - subject
+  - send_html
+  - attachments_tmp_dir_path
+  - smtp_account
+  - admin_override
+  - admin_override_email
+  - days
+  - names
+  - ids
+  - name_snippets
+
+vars:
+  - emails: null
+  - email_bodies: null
+  - stdout: null
+  - stderr: null
+
+output:
+  - stdout: <% ctx().stdout %>
+  - stderr: <% ctx().stderr %>
+
+tasks:
+  find_servers:
+    action: stackstorm_openstack.server.list.per.user
+      query_preset=<% ctx().query_preset %>
+      search_criteria=<% ctx().criteria_list %>
+      days=<% ctx().days %>
+      names=<% ctx().names %>
+      ids=<% ctx().ids %>
+      name_snippets=<% ctx().name_snippets %>
+      get_html=<% ctx().send_html %>
+    next:
+      - when: <% result().result != null %>
+        publish:
+          - emails: <% result().result.keys() %>
+          - email_bodies: <% result().result.values() %>
+        #  - stdout: <% result().result.keys() %>, <% result().result.values() %>
+        do:
+          - send_email
+      - when: <% failed() %>
+        publish:
+          - stderr: <% result().stderr %>
+        do: fail
+
+  send_email:
+    with: email, body in <% zip(ctx(emails), ctx(email_bodies)) %>
+    action: stackstorm_send_notifications.send.email
+      send_as_html=<% ctx().send_html %>
+      smtp_account=<% ctx().smtp_account %>
+      email_from=<% ctx().email_from %>
+      email_to=<% list(item(email)) %>
+      body=<% item(body) %>
+      subject=<% ctx().subject %>
+      footer=<% ctx().footer %>
+      header=<% ctx().header %>
+      admin_override=<% ctx().admin_override %>
+      admin_override_email=<% ctx().admin_override_email %>
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - stdout: <% result().stdout %>
+      - when: <% failed() %>
+        publish:
+          - stderr: <% result().stderr %>
+        do: fail

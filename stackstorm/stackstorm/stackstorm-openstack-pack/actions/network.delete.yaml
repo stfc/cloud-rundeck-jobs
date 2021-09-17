@@ -1,0 +1,19 @@
+---
+description: Delete Network
+enabled: true
+entry_point: src/network.py
+name: network.delete
+parameters:
+    submodule:
+        default: network_delete
+        immutable: true
+        type: string
+    network:
+        default: Network Name or ID to delete
+        type: string
+        required: True
+    project:
+        description: Project which contains Network to delete (Name or ID)
+        required: True
+        type: string
+runner_type: python-script

@@ -1,0 +1,24 @@
+---
+description: Disable a service on a hypervisor.
+enabled: true
+entry_point: src/hypervisor.py
+name: hypervisor.service.disable
+parameters:
+  submodule:
+    default: hypervisor_service_disable
+    immutable: true
+    type: string
+  hypervisor:
+    description: Name or ID of hypervisor which hosts service to disable
+    required: true
+    type: string
+  service_binary:
+    description: Service name to disable on hypervisor
+    required: true
+    type: string
+  reason:
+    description: Comment/Reason for disabling service
+    required: true
+    type: string
+    default: Disabled by StackStorm - no reason given
+runner_type: python-script
